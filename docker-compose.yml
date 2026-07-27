@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: smartdocqa-qdrant
+    ports:
+      - "6335:6333"   # ← 6335 on host, maps to 6333 inside container
+      - "6336:6334"   # ← 6336 on host, maps to 6334 inside container (gRPC)
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  neo4j:
+    image: neo4j:5
+    container_name: smartdocqa-neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/password123
+    volumes:
+      - neo4j_data:/data
+    restart: unless-stopped
+
+volumes:
+  qdrant_data:
+  neo4j_data:

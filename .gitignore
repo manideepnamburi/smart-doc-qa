@@ -1,0 +1,20 @@
+# Build outputs — regenerated every build; also contain COPIES of your
+# real appsettings.Development.json (we saw this in the audit)
+bin/
+obj/
+
+# Real secrets — never enter git. The committed .template file
+# documents what keys a cloner needs to fill in.
+**/appsettings.Development.json
+
+# Local databases — runtime state, not source code
+*.db
+*.db-shm
+*.db-wal
+
+# Test documents — large binaries; repo stays clonable in seconds
+data_vault/
+
+# Visual Studio local state
+.vs/
+*.user

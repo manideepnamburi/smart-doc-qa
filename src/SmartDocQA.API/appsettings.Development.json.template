@@ -1,0 +1,21 @@
+{
+  "Anthropic": {
+    "ApiKey": "sk-ant-YOUR_KEY_HERE"
+  },
+  "Embedding": {
+    "AzureEndpoint": "https://YOUR_RESOURCE.openai.azure.com/",
+    "AzureApiKey": "YOUR_AZURE_API_KEY_HERE"
+  },
+
+  "AzureDocIntelligence": {
+    "Endpoint": "https://YOUR_RESOURCE.cognitiveservices.azure.com/",
+    "ApiKey": "YOUR_AZURE_DocIntelligence_KEY_HERE",
+    "Enabled": true
+  },
+
+  "Neo4j": {
+    "Uri": "bolt://localhost:7687",
+    "Username": "neo4j",
+    "Password": "YOUR_NEO4J_PASSWORD"
+  }
+}

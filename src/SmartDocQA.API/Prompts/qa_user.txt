@@ -1,0 +1,9 @@
+Use the following document context to answer the question.
+
+CONTEXT:
+{{context}}
+
+QUESTION:
+{{question}}
+
+Answer based only on the context above. Include CITATIONS at the end.

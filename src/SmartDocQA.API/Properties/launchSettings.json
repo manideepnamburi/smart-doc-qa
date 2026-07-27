@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "SmartDocQA.API": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_SYSTEM_NET_DISABLEIPV6":"1"
+      },
+      "applicationUrl": "https://localhost:59776;http://localhost:59777"
+    }
+  }
+}
