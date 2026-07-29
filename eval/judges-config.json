@@ -1,0 +1,25 @@
+{
+  "judges": [
+    {
+      "name": "haiku",
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5-20251001",
+      "apiKeyEnvVar": "ANTHROPIC_API_KEY",
+      "enabled": true
+    },
+    {
+      "name": "sonnet",
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-6",
+      "apiKeyEnvVar": "ANTHROPIC_API_KEY",
+      "enabled": false
+    },
+    {
+      "name": "gpt4o-mini",
+      "provider": "openai",
+      "model": "gpt-4o-mini",
+      "apiKeyEnvVar": "OPENAI_API_KEY",
+      "enabled": false
+    }
+  ]
+}
