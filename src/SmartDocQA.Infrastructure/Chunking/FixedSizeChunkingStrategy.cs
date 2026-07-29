@@ -1,70 +1,28 @@
-using Microsoft.Extensions.Options;
-using SmartDocQA.Application.Configuration;
-using SmartDocQA.Domain.Enums;
-using SmartDocQA.Domain.Interfaces;
-using SmartDocQA.Domain.Models;
-
-namespace SmartDocQA.Infrastructure.Chunking;
-
-/// <summary>
-/// Splits parsed pages into fixed-size token chunks with configurable overlap.
-/// Simple word-based tokenization — good enough for Phase 1.
-/// </summary>
-public class FixedSizeChunkingStrategy : IChunkingStrategy
-{
-    private readonly ChunkingOptions _options;
+// ── Add this to the constructor in FixedSizeChunkingStrategy.cs ──
+//
+// Replace this:
+//
+//     public FixedSizeChunkingStrategy(IOptions<ChunkingOptions> options)
+//     {
+//         _options = options.Value;
+//     }
+//
+// With this:
 
     public FixedSizeChunkingStrategy(IOptions<ChunkingOptions> options)
     {
         _options = options.Value;
-    }
 
-    public Task<List<DocumentChunk>> ChunkAsync(
-        ParsedDocument document,
-        string documentId,
-        CancellationToken ct = default)
-    {
-        var chunks = new List<DocumentChunk>();
-        var chunkIndex = 0;
-
-        foreach (var page in document.Pages)
+        // Guard against an infinite loop: if Overlap >= TokenSize, the sliding
+        // window in ChunkAsync never advances (start += TokenSize - Overlap
+        // becomes zero or negative), and ingestion hangs forever on the first
+        // non-empty page. Fail fast at startup instead of hanging mid-request.
+        if (_options.Overlap >= _options.TokenSize)
         {
-            ct.ThrowIfCancellationRequested();
-
-            if (string.IsNullOrWhiteSpace(page.RawText)) continue;
-
-            // Simple word tokenization (swap for tiktoken or ML tokenizer later)
-            var words = page.RawText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-            var start = 0;
-            while (start < words.Length)
-            {
-                var end = Math.Min(start + _options.TokenSize, words.Length);
-                var content = string.Join(" ", words[start..end]);
-
-                chunks.Add(new DocumentChunk(
-                    ChunkId: $"{documentId}_{chunkIndex}",
-                    DocumentId: documentId,
-                    FileName: document.FileName,
-                    Content: content,
-                    ChunkType: page.IsScanned ? ChunkType.OcrPage : ChunkType.Text,
-                    PageNumber: page.PageNumber,
-                    ChunkIndex: chunkIndex,
-                    Metadata: new Dictionary<string, string>
-                    {
-                        ["word_count"] = words.Length.ToString(),
-                        ["start_word"] = start.ToString(),
-                        ["end_word"] = end.ToString()
-                    }
-                ));
-
-                chunkIndex++;
-
-                // Overlap: step back by overlap amount
-                start += _options.TokenSize - _options.Overlap;
-            }
+            throw new InvalidOperationException(
+                $"Invalid chunking configuration: Overlap ({_options.Overlap}) must be " +
+                $"less than TokenSize ({_options.TokenSize}). " +
+                $"Check the Chunking section in appsettings.json — Overlap must always " +
+                $"be smaller than TokenSize, or the chunker will loop forever on ingestion.");
         }
-
-        return Task.FromResult(chunks);
     }
-}
