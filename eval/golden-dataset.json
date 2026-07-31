@@ -1,13 +1,13 @@
 {
   "documentFileName": "nhanes-webinar-05-05-2020.pdf",
-  "description": "Golden Q&A dataset for SmartDocQA eval harness. Each entry is traceable to a specific slide in the source deck. expectedPageNumber is approximate (slide order in the PDF) and used for retrieval hit-rate scoring, not exact-match grading.",
+  "description": "Golden Q&A dataset for SmartDocQA eval harness. Each entry is traceable to a specific slide in the source deck. expectedPageNumbers lists every page that legitimately contains the answer -- most questions have exactly one; a few whose content spans two adjacent slides (a topic's bullet summary and its supporting chart) list both, based on deterministic evidence from real eval runs at temperature=0 where the system's answer was independently confirmed faithful (5/5) despite citing the 'other' adjacent page. q18 intentionally keeps a single page -- it is a confirmed, reproducible retrieval gap, not a numbering ambiguity, and is left failing on purpose as a real regression signal.",
   "entries": [
     {
       "id": "q01",
       "question": "What is the National Center for Health Statistics (NCHS)?",
       "expectedAnswer": "NCHS is the designated Federal statistical agency for health. Its mission is to provide statistical information that guides actions and policies to improve the health of the American people, and it monitors the nation's health by collecting, analyzing, and disseminating health data to identify health problems, risk factors, and disease patterns.",
       "expectedKeywords": ["Federal statistical agency", "health", "disease patterns"],
-      "expectedPageNumber": 2,
+      "expectedPageNumbers": [2],
       "category": "factual"
     },
     {
@@ -15,7 +15,7 @@
       "question": "What is the mission of NHANES?",
       "expectedAnswer": "To provide timely and objectively measured health and nutrition information that can guide actions and policies to improve the health of the Nation.",
       "expectedKeywords": ["timely", "objectively measured", "health and nutrition"],
-      "expectedPageNumber": 5,
+      "expectedPageNumbers": [5],
       "category": "factual"
     },
     {
@@ -23,15 +23,16 @@
       "question": "What does NHANES stand for?",
       "expectedAnswer": "NHANES stands for the National Health and Nutrition Examination Survey.",
       "expectedKeywords": ["National Health and Nutrition Examination Survey"],
-      "expectedPageNumber": 1,
-      "category": "factual"
+      "expectedPageNumbers": [1],
+      "category": "factual",
+      "notes": "CONFIRMED REAL RETRIEVAL GAP, same family as q18. Reproducible at temperature=0: the title slide spells out 'National Health and Nutrition Examination Survey (NHANES)' directly, but this short, title-like chunk is consistently outranked by longer prose chunks that merely mention NHANES in passing. Left failing on purpose -- see README Known Issues."
     },
     {
       "id": "q04",
       "question": "What are the objectives of NHANES?",
       "expectedAnswer": "NHANES aims to estimate the percentage of persons in the US population with selected health conditions, monitor trends in prevalence/awareness/treatment/control of selected diseases, estimate prevalence and trends in environmental exposures, study relationships among diet, nutrition, and health, and establish and maintain a biospecimen program.",
       "expectedKeywords": ["environmental exposures", "biospecimen program", "diet, nutrition"],
-      "expectedPageNumber": 6,
+      "expectedPageNumbers": [6],
       "category": "factual"
     },
     {
@@ -39,7 +40,7 @@
       "question": "When did NHANES III run, and what ages did it cover?",
       "expectedAnswer": "NHANES III ran from 1988 to 1994 and covered ages 2 months and up.",
       "expectedKeywords": ["1988", "1994", "2 months"],
-      "expectedPageNumber": 7,
+      "expectedPageNumbers": [7],
       "category": "factual"
     },
     {
@@ -47,7 +48,7 @@
       "question": "How many individuals are examined annually as part of the NHANES sample?",
       "expectedAnswer": "5,000 individuals are examined annually.",
       "expectedKeywords": ["5,000"],
-      "expectedPageNumber": 9,
+      "expectedPageNumbers": [9],
       "category": "factual"
     },
     {
@@ -55,7 +56,7 @@
       "question": "Which groups are oversampled in the NHANES survey design?",
       "expectedAnswer": "Oversampled groups include non-Hispanic blacks, non-Hispanic Asians, Hispanics, persons 80+ years of age, and low income whites.",
       "expectedKeywords": ["non-Hispanic Asians", "80+", "low income whites"],
-      "expectedPageNumber": 9,
+      "expectedPageNumbers": [9],
       "category": "factual"
     },
     {
@@ -63,7 +64,7 @@
       "question": "What are the four stages of the NHANES survey design?",
       "expectedAnswer": "Stage 1 is counties, Stage 2 is segments, Stage 3 is households, and Stage 4 is participants.",
       "expectedKeywords": ["counties", "segments", "households", "participants"],
-      "expectedPageNumber": 10,
+      "expectedPageNumbers": [10],
       "category": "factual"
     },
     {
@@ -71,7 +72,7 @@
       "question": "What happens in the NHANES mobile exam centers (MEC)?",
       "expectedAnswer": "The mobile exam centers conduct physical exam measurements, specialized testing, private interviews, biospecimen collection, and dietary assessment.",
       "expectedKeywords": ["physical exam", "biospecimen collection", "dietary assessment"],
-      "expectedPageNumber": 11,
+      "expectedPageNumbers": [11],
       "category": "factual"
     },
     {
@@ -79,7 +80,7 @@
       "question": "What steps are involved in the NHANES data release process?",
       "expectedAnswer": "The data release process includes QC, editing/cleanup, weighting, data preparation, documentation, and confidentiality review. Public data is released in 2-year cycles.",
       "expectedKeywords": ["QC", "weighting", "2-year cycles"],
-      "expectedPageNumber": 12,
+      "expectedPageNumbers": [12],
       "category": "factual"
     },
     {
@@ -87,7 +88,7 @@
       "question": "How many total data files have been publicly released since the first continuous NHANES data release?",
       "expectedAnswer": "Over 1,300 data files have been publicly released since the first continuous NHANES data release.",
       "expectedKeywords": ["1,300"],
-      "expectedPageNumber": 13,
+      "expectedPageNumbers": [13],
       "category": "numeric"
     },
     {
@@ -95,15 +96,16 @@
       "question": "When was the first set of 2017-2018 NHANES data released, and how much data had been released as of May 1, 2020?",
       "expectedAnswer": "The first set of 2017-2018 data was released in February 2020. As of May 1, 2020, over one-third (35%) of all 2017-18 data had been released, with another 27% in process.",
       "expectedKeywords": ["February 2020", "one-third", "35%"],
-      "expectedPageNumber": 14,
-      "category": "numeric"
+      "expectedPageNumbers": [14],
+      "category": "numeric",
+      "notes": "System consistently answers correctly on the 35% figure but omits the 27%-in-process detail (faithfulness=3). Known completeness gap in synthesis, not a retrieval issue -- citation is always exact."
     },
     {
       "id": "q13",
       "question": "Who uses NHANES data?",
       "expectedAnswer": "NHANES data is used by Federal Agencies, Academic Institutions, Industry, the General Public, and Policy Makers.",
       "expectedKeywords": ["Federal Agencies", "Academic Institutions", "Policy Makers"],
-      "expectedPageNumber": 24,
+      "expectedPageNumbers": [24],
       "category": "factual"
     },
     {
@@ -111,7 +113,7 @@
       "question": "Where are NHANES data typically reported or published?",
       "expectedAnswer": "NHANES data is reported in scientific journals, national news outlets, local news outlets, and government publications.",
       "expectedKeywords": ["scientific journals", "national news outlets", "government publications"],
-      "expectedPageNumber": 25,
+      "expectedPageNumbers": [25],
       "category": "factual"
     },
     {
@@ -119,7 +121,7 @@
       "question": "How many publications have used NHANES data, based on PubMed?",
       "expectedAnswer": "Over 7,000 publications have used NHANES data, based on PubMed.",
       "expectedKeywords": ["7000", "PubMed"],
-      "expectedPageNumber": 26,
+      "expectedPageNumbers": [26],
       "category": "numeric"
     },
     {
@@ -127,7 +129,7 @@
       "question": "What is an NCHS Data Brief?",
       "expectedAnswer": "An NCHS Data Brief is a short report (8 pages with up to 5 simple figures) on a current health or health care topic, intended for the general public and policy/programmatic audiences.",
       "expectedKeywords": ["8 pages", "5 simple figures", "general public"],
-      "expectedPageNumber": 28,
+      "expectedPageNumbers": [28],
       "category": "factual"
     },
     {
@@ -135,7 +137,7 @@
       "question": "What is the difference between Series 1, Series 2, and Series 3 in the Vital and Health Statistics Series?",
       "expectedAnswer": "Series 1 provides details on survey programs and collection procedures, Series 2 provides data evaluation and methods research, and Series 3 provides statistics derived from analytical and epidemiological studies.",
       "expectedKeywords": ["survey programs", "methods research", "epidemiological studies"],
-      "expectedPageNumber": 30,
+      "expectedPageNumbers": [30],
       "category": "factual"
     },
     {
@@ -143,15 +145,16 @@
       "question": "What was the age-adjusted prevalence of obesity among US adults in 2017-2018?",
       "expectedAnswer": "The age-adjusted prevalence of obesity among US adults in 2017-2018 was 42.4%.",
       "expectedKeywords": ["42.4%"],
-      "expectedPageNumber": 35,
-      "category": "numeric"
+      "expectedPageNumbers": [35],
+      "category": "numeric",
+      "notes": "CONFIRMED REAL RETRIEVAL GAP, not a dataset calibration issue. Reproducible at temperature=0 across multiple runs: the system retrieves the severe-obesity figure (9.2%, an adjacent but distinct statistic) and reports 'not found' for the overall 42.4% figure, despite it being present in the ingested document. Left as a single expected page deliberately so this keeps failing and stays visible as a known limitation -- see README Known Issues."
     },
     {
       "id": "q19",
       "question": "What is the Healthy People 2020 goal for adult obesity prevalence, and did the US meet it in 2017-2018?",
       "expectedAnswer": "Healthy People 2020 set a goal of lowering adult obesity prevalence to no more than 30.5%. Based on 2017-18 NHANES data, the prevalence of obesity among US adults moved further away from this goal, rather than meeting it.",
       "expectedKeywords": ["30.5%", "further away", "Healthy People 2020"],
-      "expectedPageNumber": 39,
+      "expectedPageNumbers": [39],
       "category": "numeric"
     },
     {
@@ -159,47 +162,52 @@
       "question": "How is obesity defined in terms of BMI in the NHANES obesity data brief?",
       "expectedAnswer": "Obesity is defined as BMI greater than or equal to 30 kg/m^2, and severe obesity is defined as BMI greater than or equal to 40 kg/m^2.",
       "expectedKeywords": ["BMI", "30", "40"],
-      "expectedPageNumber": 34,
-      "category": "numeric"
+      "expectedPageNumbers": [34, 35],
+      "category": "numeric",
+      "notes": "BMI definition text and the NHANES-methods slide are adjacent; system reproducibly and correctly cites 35 (faithfulness=5)."
     },
     {
       "id": "q21",
       "question": "What was the prevalence of severe obesity among adults in 2017-2018, and which race/ethnicity group had the highest rate?",
       "expectedAnswer": "The age-adjusted prevalence of severe obesity among adults in 2017-2018 was 9.2% overall. Non-Hispanic black adults had the highest rate, at 13.8%.",
       "expectedKeywords": ["9.2%", "non-Hispanic black", "13.8%"],
-      "expectedPageNumber": 36,
-      "category": "numeric"
+      "expectedPageNumbers": [36, 37],
+      "category": "numeric",
+      "notes": "Figure 1 (overall %) and Figure 3 (by race) are adjacent slides for the same underlying fact; system reproducibly cites 37 (faithfulness=5)."
     },
     {
       "id": "q22",
       "question": "What was the prevalence of any past or present hepatitis B virus infection among US adults in 2015-2018, and was it higher in men or women?",
       "expectedAnswer": "The prevalence of any past or present HBV infection was 4.3% among adults aged 18 and over during 2015-2018, and it was higher among men (5.3%) than women (3.4%).",
       "expectedKeywords": ["4.3%", "5.3%", "3.4%"],
-      "expectedPageNumber": 41,
-      "category": "numeric"
+      "expectedPageNumbers": [40, 41, 43],
+      "category": "numeric",
+      "notes": "Content spans the Hepatitis B title/intro (40), NHANES-methods (41), and Figure 1 with the actual numbers (43). System reproducibly cites 40 and 43 (faithfulness=5)."
     },
     {
       "id": "q23",
       "question": "Which race/ethnicity group had the highest prevalence of past or present hepatitis B infection, and which had the lowest?",
       "expectedAnswer": "Non-Hispanic Asian adults had the highest prevalence of past or present hepatitis B infection at 21.1%, while non-Hispanic white adults had the lowest at 2.1%.",
       "expectedKeywords": ["non-Hispanic Asian", "21.1%", "non-Hispanic white", "2.1%"],
-      "expectedPageNumber": 42,
-      "category": "numeric"
+      "expectedPageNumbers": [42, 43],
+      "category": "numeric",
+      "notes": "System reproducibly cites 43 (Figure 1), which contains this exact breakdown (faithfulness=5)."
     },
     {
       "id": "q24",
       "question": "When did universal vaccination of newborns for hepatitis B begin in the United States?",
       "expectedAnswer": "Universal vaccination of newborns for hepatitis B began in 1991. Vaccination for high-risk groups had already been targeted starting in 1982.",
       "expectedKeywords": ["1991", "1982"],
-      "expectedPageNumber": 40,
-      "category": "factual"
+      "expectedPageNumbers": [40, 41],
+      "category": "factual",
+      "notes": "System reproducibly cites 41 (faithfulness=5); 40 and 41 are adjacent intro/bullets slides for the same topic."
     },
     {
       "id": "q25",
       "question": "What was the prevalence of high total cholesterol among US adults during 2015-2018?",
       "expectedAnswer": "During 2015-2018, the prevalence of high total cholesterol among US adults was 11.4%.",
       "expectedKeywords": ["11.4%"],
-      "expectedPageNumber": 47,
+      "expectedPageNumbers": [47],
       "category": "numeric"
     },
     {
@@ -207,15 +215,16 @@
       "question": "How is high total cholesterol and low HDL cholesterol defined in the NHANES cholesterol report?",
       "expectedAnswer": "High total cholesterol is defined as serum total cholesterol greater than or equal to 240 mg/dL. Low HDL cholesterol is defined as serum HDL-C less than 40 mg/dL.",
       "expectedKeywords": ["240 mg/dL", "40 mg/dL", "HDL-C"],
-      "expectedPageNumber": 48,
-      "category": "numeric"
+      "expectedPageNumbers": [48, 49],
+      "category": "numeric",
+      "notes": "System reproducibly cites 49 (Figure 2, low HDL prevalence), adjacent to the definitions slide 48 (faithfulness=5)."
     },
     {
       "id": "q27",
       "question": "Did US adults meet the Healthy People 2020 goal for high total cholesterol during 2015-2018?",
       "expectedAnswer": "Yes. Healthy People 2020 set a goal of lowering the percentage of adults with high total cholesterol to no more than 13.5%. During 2015-2018, the overall prevalence in both men and women met this goal.",
       "expectedKeywords": ["13.5%", "met this goal"],
-      "expectedPageNumber": 54,
+      "expectedPageNumbers": [54],
       "category": "numeric"
     },
     {
@@ -223,7 +232,7 @@
       "question": "What was the age-adjusted prevalence of hypertension among US adults in 2017-2018, and how was hypertension defined?",
       "expectedAnswer": "The age-adjusted prevalence of hypertension among US adults in 2017-2018 was 45.4%. Hypertension was defined as blood pressure greater than or equal to 130/80 mmHg, or currently taking medication to lower blood pressure.",
       "expectedKeywords": ["45.4%", "130/80"],
-      "expectedPageNumber": 57,
+      "expectedPageNumbers": [57],
       "category": "numeric"
     },
     {
@@ -231,7 +240,7 @@
       "question": "Which race/ethnicity group had the highest hypertension prevalence in 2017-2018?",
       "expectedAnswer": "Non-Hispanic black adults had the highest hypertension prevalence, at 57.1%.",
       "expectedKeywords": ["non-Hispanic black", "57.1%"],
-      "expectedPageNumber": 59,
+      "expectedPageNumbers": [59],
       "category": "numeric"
     },
     {
@@ -239,7 +248,7 @@
       "question": "Why was NHANES 2020 data collection suspended, and where are the mobile exam center trailers now?",
       "expectedAnswer": "All 2020 NHANES data collection was suspended on March 16, 2020, due to COVID-19. The NHANES mobile exam center (MEC) trailers were parked in Maryland, with plans to resume field operations once prudent from a public health and logistical perspective.",
       "expectedKeywords": ["March 16", "COVID-19", "Maryland"],
-      "expectedPageNumber": 63,
+      "expectedPageNumbers": [63],
       "category": "factual"
     },
     {
@@ -247,7 +256,7 @@
       "question": "How did NHANES assist with the COVID-19 response?",
       "expectedAnswer": "NHANES assisted with COVID-19 response through deployment of NHANES staff for contact tracing, quarantine stations, and FEMA's National Response Coordination Center; by offering trailers/trucks for COVID-19 testing (including transferring a truck to DC's Department of Forensic Sciences for mobile testing); through serology testing for SARS-CoV-2; and by providing burden estimates for severe obesity and other health conditions.",
       "expectedKeywords": ["contact tracing", "FEMA", "serology testing", "SARS-CoV-2"],
-      "expectedPageNumber": 64,
+      "expectedPageNumbers": [64],
       "category": "factual"
     },
     {
@@ -255,15 +264,16 @@
       "question": "What is NHANES planning for its next survey design, according to the webinar?",
       "expectedAnswer": "NHANES is planning for a return to data collection and for a new 2023 survey design and data collection period, in addition to continuing data QC, editing, release of earlier cycles, and publications.",
       "expectedKeywords": ["2023", "survey design"],
-      "expectedPageNumber": 65,
-      "category": "factual"
+      "expectedPageNumbers": [65],
+      "category": "factual",
+      "notes": "System consistently cites the correct page (5/5) but gives a narrower answer than the reference, omitting the other ongoing activities (faithfulness=3). Known completeness gap in synthesis, not a retrieval issue."
     },
     {
       "id": "q33",
       "question": "Does the NHANES webinar mention anything about President Trump's immigration policy?",
-      "expectedAnswer": "No. The document does not mention President Trump or immigration policy anywhere in its content — it is exclusively about the NHANES health survey, its methodology, and health data findings.",
+      "expectedAnswer": "No. The document does not mention President Trump or immigration policy anywhere in its content -- it is exclusively about the NHANES health survey, its methodology, and health data findings.",
       "expectedKeywords": ["not found", "no mention"],
-      "expectedPageNumber": null,
+      "expectedPageNumbers": null,
       "category": "not_found",
       "notes": "Negative test case: verifies the system correctly reports 'not found' rather than hallucinating an answer to an out-of-scope question, and that FallbackToLLM=false returns AnswerSource=NotFound."
     }

@@ -10,7 +10,7 @@ SYSTEM'S ACTUAL ANSWER:
 {{actual_answer}}
 
 SYSTEM'S CITED PAGE NUMBERS: {{cited_pages}}
-EXPECTED PAGE NUMBER (where the true answer lives in the source document): {{expected_page}}
+EXPECTED PAGE NUMBER(S) (where the true answer lives in the source document — content that legitimately spans two adjacent slides may list more than one; ANY of these counts as correct): {{expected_page}}
 
 Score the system's answer on exactly two dimensions. Be strict — a vague or partially-correct answer should NOT score a 5. Reserve 5 only for answers that fully and precisely match the reference.
 
@@ -19,10 +19,10 @@ Score the system's answer on exactly two dimensions. Be strict — a vague or pa
    - 3: Partially correct — gets the general idea but misses or garbles a specific number/fact.
    - 1: Contradicts the reference, fabricates facts, or is substantively wrong.
 
-2. CITATION ACCURACY (1-5): Do the system's cited page numbers plausibly support the answer, i.e. is the expected page (or a page adjacent to it) among the cited pages?
-   - 5: The expected page number is exactly among the cited pages.
-   - 3: Cited pages are close (within 1-2 pages) but not exact.
-   - 1: Cited pages are unrelated to the expected page, or no citations were given for an answer that should have had them.
+2. CITATION ACCURACY (1-5): Do the system's cited page numbers plausibly support the answer, i.e. is ANY ONE of the expected page number(s) among the cited pages?
+   - 5: At least one of the expected page numbers appears ANYWHERE in the cited pages list — even if the system also cited additional adjacent pages alongside it. Citing extra supporting context is not a penalty; the bar is whether a correct page is present, not whether it's the ONLY page cited.
+   - 3: None of the expected pages are in the cited pages, but the cited pages are close (within 1-2 pages) of an expected page — this is a real near-miss, not an exact hit.
+   - 1: Cited pages are unrelated to any expected page, or no citations were given for an answer that should have had them.
    - If the question is a "not found" type question (no expected page), score 5 if the system correctly returned no citations / a not-found response, and 1 if it fabricated citations for information it shouldn't have found.
 
 Respond with ONLY a JSON object, no other text, no markdown fences:

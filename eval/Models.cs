@@ -2,6 +2,18 @@ using System.Text.Json.Serialization;
 
 namespace SmartDocQA.Eval;
 
+// ── Local copies of the real API's enums (see .csproj comment on why this
+// project doesn't reference SmartDocQA.Domain directly). Declaration ORDER
+// must match src/SmartDocQA.Domain/Enums/DomainEnums.cs exactly, since the
+// API serializes these as raw integers (System.Text.Json's default enum
+// behavior) and .NET maps int -> enum purely by ordinal position, not name.
+// If the real enums are ever reordered or extended, update these to match.
+
+public enum ChunkType { Text, Table, Chart, OcrPage }
+public enum ConfidenceLevel { High, Medium, Low, NotFound }
+public enum RetrievalMode { DenseOnly, SparseOnly, Hybrid, HybridWithGraph }
+public enum AnswerSource { Document, LLMFallback, NotFound }
+
 // ── Golden dataset ──────────────────────────────────────────────────────────
 
 public record GoldenDataset(
@@ -14,7 +26,7 @@ public record GoldenEntry(
     string Question,
     string ExpectedAnswer,
     List<string> ExpectedKeywords,
-    int? ExpectedPageNumber,
+    List<int>? ExpectedPageNumbers,
     string Category,
     string? Notes = null);
 
@@ -35,15 +47,15 @@ public record ApiCitation(
     string ChunkId,
     string FileName,
     int PageNumber,
-    string ChunkType,
+    ChunkType ChunkType,
     string RelevantExcerpt);
 
 public record ApiQAResult(
     string Answer,
     List<ApiCitation> Citations,
-    string Confidence,
-    string RetrievalMode,
-    string AnswerSource,
+    ConfidenceLevel Confidence,
+    RetrievalMode RetrievalMode,
+    AnswerSource AnswerSource,
     int ChunksRetrieved,
     int ChunksAfterRerank,
     [property: JsonPropertyName("processingTime")] string? ProcessingTime);
@@ -66,7 +78,7 @@ public class QuestionResult
     public required string Id { get; init; }
     public required string Question { get; init; }
     public required string ExpectedAnswer { get; init; }
-    public required int? ExpectedPageNumber { get; init; }
+    public required List<int>? ExpectedPageNumbers { get; init; }
     public required string Category { get; init; }
 
     public string? ActualAnswer { get; set; }

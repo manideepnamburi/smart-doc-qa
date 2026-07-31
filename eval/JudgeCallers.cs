@@ -20,7 +20,9 @@ internal static class RubricFiller
             .Replace("{{expected_answer}}", entry.ExpectedAnswer)
             .Replace("{{actual_answer}}", result.ActualAnswer ?? "(no answer returned)")
             .Replace("{{cited_pages}}", string.Join(", ", result.ActualCitedPages))
-            .Replace("{{expected_page}}", entry.ExpectedPageNumber?.ToString() ?? "N/A (not-found question)");
+            .Replace("{{expected_page}}", entry.ExpectedPageNumbers is { Count: > 0 }
+                ? string.Join(" or ", entry.ExpectedPageNumbers)
+                : "N/A (not-found question)");
 
     public static JudgeScore ParseJudgeJson(string text)
     {

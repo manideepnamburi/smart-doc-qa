@@ -43,6 +43,7 @@ public class ClaudeHttpClient : ILlmClient
         {
             model = _options.ChatModel,
             max_tokens = _options.MaxTokens,
+            temperature = _options.Temperature,
             system = systemPrompt,
             messages = new[]
             {
@@ -65,6 +66,7 @@ public class ClaudeHttpClient : ILlmClient
         {
             model = _options.VisionModel,
             max_tokens = _options.MaxTokens,
+            temperature = _options.Temperature,
             system = systemPrompt,
             messages = new[]
             {

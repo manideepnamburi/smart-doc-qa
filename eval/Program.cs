@@ -95,7 +95,7 @@ public static class Program
                 Id = entry.Id,
                 Question = entry.Question,
                 ExpectedAnswer = entry.ExpectedAnswer,
-                ExpectedPageNumber = entry.ExpectedPageNumber,
+                ExpectedPageNumbers = entry.ExpectedPageNumbers,
                 Category = entry.Category
             };
 
@@ -117,7 +117,7 @@ public static class Program
                 result.ApiCallSucceeded = true;
                 result.ActualAnswer = qaResult.Answer;
                 result.ActualCitedPages = qaResult.Citations.Select(c => c.PageNumber).Distinct().ToList();
-                result.AnswerSource = qaResult.AnswerSource;
+                result.AnswerSource = qaResult.AnswerSource.ToString();
                 result.ChunksRetrieved = qaResult.ChunksRetrieved;
 
                 report.ApiCallsSucceeded++;
@@ -134,9 +134,9 @@ public static class Program
 
             if (entry.Category == "not_found")
                 result.RetrievalHit = result.AnswerSource == "NotFound";
-            else if (entry.ExpectedPageNumber.HasValue)
+            else if (entry.ExpectedPageNumbers is { Count: > 0 })
                 result.RetrievalHit = result.ActualCitedPages
-                    .Any(p => Math.Abs(p - entry.ExpectedPageNumber.Value) <= 1);
+                    .Any(p => entry.ExpectedPageNumbers.Any(expected => Math.Abs(p - expected) <= 1));
 
             if (result.RetrievalHit == true) report.RetrievalHits++;
             else if (result.RetrievalHit == false) report.RetrievalMisses++;

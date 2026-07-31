@@ -1,0 +1,919 @@
+{
+  "RunTimestamp": "2026-07-31T23:02:06.1117129Z",
+  "TotalQuestions": 33,
+  "ApiCallsSucceeded": 33,
+  "ApiCallsFailed": 0,
+  "RetrievalHits": 30,
+  "RetrievalMisses": 3,
+  "RetrievalHitRate": 0.9090909090909091,
+  "JudgeAggregates": [
+    {
+      "JudgeName": "haiku",
+      "Model": "claude-haiku-4-5-20251001",
+      "AverageFaithfulness": 4.606060606060606,
+      "AverageCitationAccuracy": 5,
+      "OverallPassCount": 29,
+      "TotalScored": 33,
+      "OverallPassRate": 0.8787878787878788
+    }
+  ],
+  "Results": [
+    {
+      "Id": "q01",
+      "Question": "What is the National Center for Health Statistics (NCHS)?",
+      "ExpectedAnswer": "NCHS is the designated Federal statistical agency for health. Its mission is to provide statistical information that guides actions and policies to improve the health of the American people, and it monitors the nation\u0027s health by collecting, analyzing, and disseminating health data to identify health problems, risk factors, and disease patterns.",
+      "ExpectedPageNumbers": [
+        2
+      ],
+      "Category": "factual",
+      "ActualAnswer": "The National Center for Health Statistics (NCHS) is the designated Federal statistical agency for health. Its mission is to provide statistical information that will guide actions and policies to improve the health of the American people. NCHS monitors the nation\u0027s health by collecting, analyzing, and disseminating health data to identify health problems, risk factors, and disease patterns.",
+      "ActualCitedPages": [
+        2
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer is virtually identical to the reference answer, containing all the same key facts about NCHS being the designated Federal statistical agency for health, its mission to guide actions and policies, and its role in monitoring health by collecting, analyzing, and disseminating data to identify health problems, risk factors, and disease patterns.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 2, which matches the expected page number(s) exactly where the true answer is located in the source document.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q02",
+      "Question": "What is the mission of NHANES?",
+      "ExpectedAnswer": "To provide timely and objectively measured health and nutrition information that can guide actions and policies to improve the health of the Nation.",
+      "ExpectedPageNumbers": [
+        5
+      ],
+      "Category": "factual",
+      "ActualAnswer": "The mission of NHANES is to provide timely and objectively measured health and nutrition information that can guide actions and policies to improve the health of the Nation.",
+      "ActualCitedPages": [
+        5
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer is word-for-word identical to the reference answer, containing all key facts and claims without any fabrication or contradiction.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 5, which matches exactly the expected page number where the true answer is located.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q03",
+      "Question": "What does NHANES stand for?",
+      "ExpectedAnswer": "NHANES stands for the National Health and Nutrition Examination Survey.",
+      "ExpectedPageNumbers": [
+        1
+      ],
+      "Category": "factual",
+      "ActualAnswer": "I could not find this information in the provided documents.\n\nThe context chunks contain references to NHANES data from various years (2019-2020, 2017-2018, etc.) and tables mentioning NHANES, but they do not include the full name or definition of what the acronym \u0022NHANES\u0022 stands for.",
+      "ActualCitedPages": [],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": false,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 1,
+          "faithfulness_reasoning": "The system claims it could not find the definition of NHANES, but the reference answer definitively shows the acronym stands for \u0027National Health and Nutrition Examination Survey,\u0027 meaning the system failed to retrieve or provide correct information that exists in the source document.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system correctly cites no page numbers for a \u0027not found\u0027 response, which is the appropriate citation behavior when claiming information is unavailable; however, this is moot because the information actually does exist on page 1.",
+          "overall_pass": false
+        }
+      }
+    },
+    {
+      "Id": "q04",
+      "Question": "What are the objectives of NHANES?",
+      "ExpectedAnswer": "NHANES aims to estimate the percentage of persons in the US population with selected health conditions, monitor trends in prevalence/awareness/treatment/control of selected diseases, estimate prevalence and trends in environmental exposures, study relationships among diet, nutrition, and health, and establish and maintain a biospecimen program.",
+      "ExpectedPageNumbers": [
+        6
+      ],
+      "Category": "factual",
+      "ActualAnswer": "The objectives of NHANES are:\n\n- Estimate the percentage of persons in the US population with selected health conditions (chronic and infectious diseases)\n- Monitor trends in the prevalence, awareness, treatment and control of selected diseases and conditions\n- Estimate prevalence and trends in environmental exposures\n- Study the relationships among diet, nutrition and health\n- Establish and maintain a biospecimen program",
+      "ActualCitedPages": [
+        6
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer fully matches the reference answer by listing all five key objectives of NHANES with accurate and complete information, including the minor clarification about disease types (chronic and infectious) that is consistent with the reference\u0027s intent.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 6, which is exactly one of the expected page numbers where the true answer is located.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q05",
+      "Question": "When did NHANES III run, and what ages did it cover?",
+      "ExpectedAnswer": "NHANES III ran from 1988 to 1994 and covered ages 2 months and up.",
+      "ExpectedPageNumbers": [
+        7
+      ],
+      "Category": "factual",
+      "ActualAnswer": "NHANES III ran from 1988 \u2013 94 and covered ages 2 months and older.",
+      "ActualCitedPages": [
+        7
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer provides the exact same key facts as the reference: NHANES III ran from 1988-1994 (expressed as \u00271988 \u2013 94\u0027 which is equivalent) and covered ages 2 months and up (expressed as \u00272 months and older\u0027 which conveys the same meaning).",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 7, which is one of the expected page numbers where the true answer is located.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q06",
+      "Question": "How many individuals are examined annually as part of the NHANES sample?",
+      "ExpectedAnswer": "5,000 individuals are examined annually.",
+      "ExpectedPageNumbers": [
+        9
+      ],
+      "Category": "factual",
+      "ActualAnswer": "According to the NHANES sample information, 5,000 individuals are examined annually.",
+      "ActualCitedPages": [
+        9
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer states that 5,000 individuals are examined annually, which exactly matches the reference answer\u0027s key fact with no contradictions or fabrications.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 9, which is one of the expected page numbers where the true answer lives.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q07",
+      "Question": "Which groups are oversampled in the NHANES survey design?",
+      "ExpectedAnswer": "Oversampled groups include non-Hispanic blacks, non-Hispanic Asians, Hispanics, persons 80\u002B years of age, and low income whites.",
+      "ExpectedPageNumbers": [
+        9
+      ],
+      "Category": "factual",
+      "ActualAnswer": "The groups that are oversampled in the NHANES survey design are:\n\n- Non-Hispanic blacks\n- Non-Hispanic Asians\n- Hispanics\n- 80\u002B years of age\n- Low income whites",
+      "ActualCitedPages": [
+        9
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer lists all five oversampled groups (non-Hispanic blacks, non-Hispanic Asians, Hispanics, 80\u002B years of age, and low income whites) in the exact same format and with the same terminology as the reference answer, with no contradictions or fabrications.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 9, which matches exactly with the expected page number(s) where the true answer is located.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q08",
+      "Question": "What are the four stages of the NHANES survey design?",
+      "ExpectedAnswer": "Stage 1 is counties, Stage 2 is segments, Stage 3 is households, and Stage 4 is participants.",
+      "ExpectedPageNumbers": [
+        10
+      ],
+      "Category": "factual",
+      "ActualAnswer": "The four stages of the NHANES survey design are:\n\n1. **Stage 1 - Counties:** Selected counties across the country\n2. **Stage 2 - Segments:** Subdivisions within a selected geographic area\n3. **Stage 3 - Households:** Individual households selected within the segments\n4. **Stage 4 - Participants:** Individual survey participants selected from the sampled households\n\nThis represents a nested, multi-stage cluster sampling approach that progressively narrows from broad geographic areas down to specific individuals.",
+      "ActualCitedPages": [
+        10
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer precisely matches the reference answer by correctly identifying all four stages (counties, segments, households, participants) with accurate descriptions and no fabrications or contradictions.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 10, which is exactly one of the expected page numbers where the true answer is located.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q09",
+      "Question": "What happens in the NHANES mobile exam centers (MEC)?",
+      "ExpectedAnswer": "The mobile exam centers conduct physical exam measurements, specialized testing, private interviews, biospecimen collection, and dietary assessment.",
+      "ExpectedPageNumbers": [
+        11
+      ],
+      "Category": "factual",
+      "ActualAnswer": "Based on the provided context, the following activities happen in NHANES mobile exam centers (MEC):\n\n- Physical exam measurements\n- Specialized testing\n- Private interviews\n- Biospecimen collection\n- Dietary assessment",
+      "ActualCitedPages": [
+        11
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer lists all five key activities (physical exam measurements, specialized testing, private interviews, biospecimen collection, and dietary assessment) that match exactly with the reference answer, with no fabrication or contradiction.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 11, which is one of the expected page numbers where the true answer is located.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q10",
+      "Question": "What steps are involved in the NHANES data release process?",
+      "ExpectedAnswer": "The data release process includes QC, editing/cleanup, weighting, data preparation, documentation, and confidentiality review. Public data is released in 2-year cycles.",
+      "ExpectedPageNumbers": [
+        12
+      ],
+      "Category": "factual",
+      "ActualAnswer": "The steps involved in the NHANES data release process are:\n\n1. QC\n2. Editing/cleanup\n3. Weighting\n4. Data preparation\n5. Documentation\n6. Confidentiality review\n\nPublic data is released in 2-year cycles.",
+      "ActualCitedPages": [
+        12
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer precisely matches the reference answer by listing all six steps (QC, editing/cleanup, weighting, data preparation, documentation, confidentiality review) in the correct order and accurately stating that public data is released in 2-year cycles.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 12, which is the expected page number where the true answer is located, satisfying the citation accuracy requirement.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q11",
+      "Question": "How many total data files have been publicly released since the first continuous NHANES data release?",
+      "ExpectedAnswer": "Over 1,300 data files have been publicly released since the first continuous NHANES data release.",
+      "ExpectedPageNumbers": [
+        13
+      ],
+      "Category": "numeric",
+      "ActualAnswer": "Over 1,300 data files have been publicly released since the first continuous NHANES data release.",
+      "ActualCitedPages": [
+        13
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer is word-for-word identical to the reference answer, containing the exact same key fact (over 1,300 data files) and claim about the timing (since the first continuous NHANES data release).",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 13, which matches exactly with the expected page number(s) where the true answer is located.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q12",
+      "Question": "When was the first set of 2017-2018 NHANES data released, and how much data had been released as of May 1, 2020?",
+      "ExpectedAnswer": "The first set of 2017-2018 data was released in February 2020. As of May 1, 2020, over one-third (35%) of all 2017-18 data had been released, with another 27% in process.",
+      "ExpectedPageNumbers": [
+        14
+      ],
+      "Category": "numeric",
+      "ActualAnswer": "The first set of 2017\u20132018 NHANES data was released in February 2020. As of May 1, over 1/3 of all 2017-18 data had been released.",
+      "ActualCitedPages": [
+        14
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 3,
+          "faithfulness_reasoning": "The system correctly states the February 2020 release date and mentions \u0027over 1/3\u0027 of data released as of May 1, but it omits the specific 35% figure and entirely leaves out the 27% \u0027in process\u0027 detail that was part of the reference answer.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 14, which matches exactly with the expected page number(s) where the true answer is located.",
+          "overall_pass": false
+        }
+      }
+    },
+    {
+      "Id": "q13",
+      "Question": "Who uses NHANES data?",
+      "ExpectedAnswer": "NHANES data is used by Federal Agencies, Academic Institutions, Industry, the General Public, and Policy Makers.",
+      "ExpectedPageNumbers": [
+        24
+      ],
+      "Category": "factual",
+      "ActualAnswer": "Based on the provided documents, NHANES data is used by the following categories of users:\n\n\u2022 Federal Agencies\n\u2022 Academic Institutions\n\u2022 Industry\n\u2022 General Public\n\u2022 Policy Makers\n\nSpecific organizations that use NHANES data include the CDC, National Institutes of Health, American Heart Association, U.S. Food and Drug Administration (FDA), Johns Hopkins Medicine, American Diabetes Association, and many others across government, research, and healthcare sectors.",
+      "ActualCitedPages": [
+        24
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer accurately identifies all five categories from the reference (Federal Agencies, Academic Institutions, Industry, General Public, and Policy Makers) and provides specific examples of organizations that use NHANES data, which is consistent with and supportive of the reference answer without any contradictions or fabrications.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 24, which matches exactly the expected page number where the true answer lives in the source document.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q14",
+      "Question": "Where are NHANES data typically reported or published?",
+      "ExpectedAnswer": "NHANES data is reported in scientific journals, national news outlets, local news outlets, and government publications.",
+      "ExpectedPageNumbers": [
+        25
+      ],
+      "Category": "factual",
+      "ActualAnswer": "Based on the provided context, NHANES data are typically reported in the following venues:\n\n\u2022 Scientific Journals\n\u2022 National News Outlets\n\u2022 Local News Outlets\n\u2022 Government Publications\n\nSpecific examples of outlets and publications where NHANES data have been reported include: WebMD, JAMA, CNN.com, USA TODAY, The New York Times, TIME, Medscape, the American Heart Association, the American Medical Association, and various NCHS publications such as NCHS Data Briefs and National Health Statistics Reports.",
+      "ActualCitedPages": [
+        25,
+        28,
+        29
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer fully matches the reference answer by identifying all four key categories (scientific journals, national news outlets, local news outlets, and government publications) and supports them with specific, plausible examples that are consistent with the reference material.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "Page 25 is cited by the system and matches the expected page number where the true answer lives, satisfying the citation accuracy requirement despite additional pages being cited.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q15",
+      "Question": "How many publications have used NHANES data, based on PubMed?",
+      "ExpectedAnswer": "Over 7,000 publications have used NHANES data, based on PubMed.",
+      "ExpectedPageNumbers": [
+        26
+      ],
+      "Category": "numeric",
+      "ActualAnswer": "Over 7,000 publications have used NHANES data based on PubMed.",
+      "ActualCitedPages": [
+        26
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer precisely matches the reference answer, including the exact number (\u0027Over 7,000 publications\u0027), the source (\u0027NHANES data\u0027), and the verification method (\u0027based on PubMed\u0027), with no contradictions or fabrications.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 26, which is exactly one of the expected page numbers where the true answer is located.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q16",
+      "Question": "What is an NCHS Data Brief?",
+      "ExpectedAnswer": "An NCHS Data Brief is a short report (8 pages with up to 5 simple figures) on a current health or health care topic, intended for the general public and policy/programmatic audiences.",
+      "ExpectedPageNumbers": [
+        28
+      ],
+      "Category": "factual",
+      "ActualAnswer": "An NCHS Data Brief is a short report (8 pages with up to 5 simple figures) on a current health or health care topic. It is intended for general public and policy/programmatic audiences.",
+      "ActualCitedPages": [
+        28
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer contains all the key facts from the reference (8 pages, up to 5 simple figures, current health/health care topic, intended for general public and policy/programmatic audiences) with no contradictions or fabrications.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 28, which is exactly one of the expected page numbers where the true answer is located.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q17",
+      "Question": "What is the difference between Series 1, Series 2, and Series 3 in the Vital and Health Statistics Series?",
+      "ExpectedAnswer": "Series 1 provides details on survey programs and collection procedures, Series 2 provides data evaluation and methods research, and Series 3 provides statistics derived from analytical and epidemiological studies.",
+      "ExpectedPageNumbers": [
+        30
+      ],
+      "Category": "factual",
+      "ActualAnswer": "Based on the provided context, the differences between the three series in the Vital and Health Statistics Series are:\n\n**Series 1** provides details on survey programs and collection procedures.\n\n**Series 2** provides data evaluation and methods research.\n\n**Series 3** provides statistics derived from analytical and epidemiological studies.",
+      "ActualCitedPages": [
+        30
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer precisely matches the reference answer, providing the exact same descriptions for Series 1 (survey programs and collection procedures), Series 2 (data evaluation and methods research), and Series 3 (statistics from analytical and epidemiological studies) with no fabrications or contradictions.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 30, which is the expected page number where the true answer is located in the source document.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q18",
+      "Question": "What was the age-adjusted prevalence of obesity among US adults in 2017-2018?",
+      "ExpectedAnswer": "The age-adjusted prevalence of obesity among US adults in 2017-2018 was 42.4%.",
+      "ExpectedPageNumbers": [
+        35
+      ],
+      "Category": "numeric",
+      "ActualAnswer": "I could not find this information in the provided documents.\n\nThe context provided contains data on the age-adjusted prevalence of **severe obesity** among US adults in 2017-2018 (9.2% overall), but it does not include the specific prevalence figure for obesity (BMI \u2265 30 kg/m\u00B2) overall for that time period. While the documents reference obesity data and mention that prevalence moved away from the Healthy People 2020 goal of 30.5%, the actual 2017-2018 obesity prevalence rate is not stated in these chunks.",
+      "ActualCitedPages": [],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": false,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 1,
+          "faithfulness_reasoning": "The system claimed the specific obesity prevalence figure was not in the documents, but the reference answer confirms it is 42.4%, meaning the system failed to retrieve and report the correct factual information that was available.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system correctly cited page 35, which is the expected page number where the answer resides; while the system said it couldn\u0027t find the information, it appropriately did not fabricate citations for information it claimed was missing.",
+          "overall_pass": false
+        }
+      }
+    },
+    {
+      "Id": "q19",
+      "Question": "What is the Healthy People 2020 goal for adult obesity prevalence, and did the US meet it in 2017-2018?",
+      "ExpectedAnswer": "Healthy People 2020 set a goal of lowering adult obesity prevalence to no more than 30.5%. Based on 2017-18 NHANES data, the prevalence of obesity among US adults moved further away from this goal, rather than meeting it.",
+      "ExpectedPageNumbers": [
+        39
+      ],
+      "Category": "numeric",
+      "ActualAnswer": "Based on the provided documents:\n\nThe Healthy People 2020 goal is to lower the percentage of adults with obesity to no more than 30.5%.\n\nThe US did not meet this goal in 2017-2018. According to the latest NHANES data from 2017-18, the prevalence of obesity among US adults was 42.4%, which is significantly higher than the 30.5% target. The document explicitly states that \u0022the prevalence of obesity among US adults has moved further away from this goal.\u0022",
+      "ActualCitedPages": [
+        39,
+        33
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer accurately states the 30.5% goal, correctly identifies that the US did not meet it in 2017-2018, provides the accurate 42.4% obesity prevalence figure, and properly conveys that the prevalence moved further away from the goal\u2014all consistent with the reference answer.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 39, which is exactly one of the expected page numbers where the true answer lives, satisfying the citation accuracy requirement.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q20",
+      "Question": "How is obesity defined in terms of BMI in the NHANES obesity data brief?",
+      "ExpectedAnswer": "Obesity is defined as BMI greater than or equal to 30 kg/m^2, and severe obesity is defined as BMI greater than or equal to 40 kg/m^2.",
+      "ExpectedPageNumbers": [
+        34,
+        35
+      ],
+      "Category": "numeric",
+      "ActualAnswer": "According to the NHANES obesity data brief, obesity is defined as BMI \u2265 30 kg/m\u00B2, and severe obesity is defined as BMI \u2265 40 kg/m\u00B2.",
+      "ActualCitedPages": [
+        35
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer precisely matches the reference answer, providing the exact same BMI thresholds (\u226530 kg/m\u00B2 for obesity and \u226540 kg/m\u00B2 for severe obesity) with no factual errors or omissions.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 35, which is one of the expected page numbers (34 or 35), satisfying the requirement that at least one expected page appears in the cited pages.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q21",
+      "Question": "What was the prevalence of severe obesity among adults in 2017-2018, and which race/ethnicity group had the highest rate?",
+      "ExpectedAnswer": "The age-adjusted prevalence of severe obesity among adults in 2017-2018 was 9.2% overall. Non-Hispanic black adults had the highest rate, at 13.8%.",
+      "ExpectedPageNumbers": [
+        36,
+        37
+      ],
+      "Category": "numeric",
+      "ActualAnswer": "Based on the provided documents:\n\nThe overall age-adjusted prevalence of severe obesity among adults aged 20\u002B in the United States in 2017-2018 was 9.2%.\n\nAmong race and Hispanic origin groups, Non-Hispanic Black adults had the highest prevalence of severe obesity at 13.8%, which was significantly different from all other groups.",
+      "ActualCitedPages": [
+        37
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer precisely matches the reference answer with the correct overall prevalence of 9.2%, correctly identifies Non-Hispanic Black adults as the group with the highest rate at 13.8%, and adds appropriate context without contradicting any facts.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 37, which is one of the two expected pages (36 or 37) where the true answer is located.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q22",
+      "Question": "What was the prevalence of any past or present hepatitis B virus infection among US adults in 2015-2018, and was it higher in men or women?",
+      "ExpectedAnswer": "The prevalence of any past or present HBV infection was 4.3% among adults aged 18 and over during 2015-2018, and it was higher among men (5.3%) than women (3.4%).",
+      "ExpectedPageNumbers": [
+        40,
+        41,
+        43
+      ],
+      "Category": "numeric",
+      "ActualAnswer": "Based on the provided documents, the prevalence of past or present hepatitis B virus infection among US adults in 2015-2018 was **4.3%** overall. The infection was higher in men at **5.3%** compared to women at **3.4%**.",
+      "ActualCitedPages": [
+        40,
+        43
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer precisely matches the reference answer with all key facts and numbers correct: 4.3% overall prevalence, 5.3% in men, and 3.4% in women, with no fabrications or contradictions.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited pages 40 and 43, and page 40 is among the expected pages (40, 41, or 43), meeting the citation accuracy requirement.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q23",
+      "Question": "Which race/ethnicity group had the highest prevalence of past or present hepatitis B infection, and which had the lowest?",
+      "ExpectedAnswer": "Non-Hispanic Asian adults had the highest prevalence of past or present hepatitis B infection at 21.1%, while non-Hispanic white adults had the lowest at 2.1%.",
+      "ExpectedPageNumbers": [
+        42,
+        43
+      ],
+      "Category": "numeric",
+      "ActualAnswer": "Based on the provided documents:\n\n**Highest prevalence:** Non-Hispanic Asian individuals had the highest prevalence of past or present hepatitis B infection at 21.1%.\n\n**Lowest prevalence:** Non-Hispanic white individuals had the lowest prevalence at 2.1%.",
+      "ActualCitedPages": [
+        43
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer exactly matches the reference answer with the correct specific statistics: Non-Hispanic Asian individuals at 21.1% (highest) and Non-Hispanic white individuals at 2.1% (lowest), with no fabrications or contradictions.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 43, which is one of the expected pages (42 or 43) where the true answer is located, meeting the citation accuracy requirement.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q24",
+      "Question": "When did universal vaccination of newborns for hepatitis B begin in the United States?",
+      "ExpectedAnswer": "Universal vaccination of newborns for hepatitis B began in 1991. Vaccination for high-risk groups had already been targeted starting in 1982.",
+      "ExpectedPageNumbers": [
+        40,
+        41
+      ],
+      "Category": "factual",
+      "ActualAnswer": "Universal vaccination of newborns for hepatitis B began in 1991 in the United States.",
+      "ActualCitedPages": [
+        41
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer states that universal vaccination of newborns for hepatitis B began in 1991 in the United States, which precisely matches the key fact in the reference answer (the year 1991).",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 41, which is one of the expected page numbers (40 or 41) where the true answer is located in the source document.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q25",
+      "Question": "What was the prevalence of high total cholesterol among US adults during 2015-2018?",
+      "ExpectedAnswer": "During 2015-2018, the prevalence of high total cholesterol among US adults was 11.4%.",
+      "ExpectedPageNumbers": [
+        47
+      ],
+      "Category": "numeric",
+      "ActualAnswer": "The prevalence of high total cholesterol among US adults during 2015-2018 was 11.4%.",
+      "ActualCitedPages": [
+        50,
+        47
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer matches the reference answer exactly, providing the precise statistic of 11.4% prevalence of high total cholesterol among US adults during 2015-2018 with no fabrication or contradiction.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "Page 47 is listed in the system\u0027s citations and matches one of the expected page numbers where the answer is found in the source document.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q26",
+      "Question": "How is high total cholesterol and low HDL cholesterol defined in the NHANES cholesterol report?",
+      "ExpectedAnswer": "High total cholesterol is defined as serum total cholesterol greater than or equal to 240 mg/dL. Low HDL cholesterol is defined as serum HDL-C less than 40 mg/dL.",
+      "ExpectedPageNumbers": [
+        48,
+        49
+      ],
+      "Category": "numeric",
+      "ActualAnswer": "Based on the NHANES cholesterol report, high total cholesterol and low HDL cholesterol are defined as follows:\n\n- **High total cholesterol:** serum total cholesterol \u2265 240 mg/dL\n- **Low HDL cholesterol:** serum HDL-C \u003C 40 mg/dL",
+      "ActualCitedPages": [
+        49
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer precisely matches the reference answer with identical definitions: high total cholesterol \u2265 240 mg/dL and low HDL cholesterol \u003C 40 mg/dL, with no fabrications or contradictions.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 49, which is one of the expected pages (48 or 49) where the true answer is located.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q27",
+      "Question": "Did US adults meet the Healthy People 2020 goal for high total cholesterol during 2015-2018?",
+      "ExpectedAnswer": "Yes. Healthy People 2020 set a goal of lowering the percentage of adults with high total cholesterol to no more than 13.5%. During 2015-2018, the overall prevalence in both men and women met this goal.",
+      "ExpectedPageNumbers": [
+        54
+      ],
+      "Category": "numeric",
+      "ActualAnswer": "Yes, US adults met the Healthy People 2020 goal for high total cholesterol during 2015-2018. The overall prevalence in both men and women met the goal of lowering the percentage of adults with high total cholesterol to no more than 13.5%.",
+      "ActualCitedPages": [
+        54
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer directly matches the reference answer by confirming that US adults met the Healthy People 2020 goal of no more than 13.5% for high total cholesterol during 2015-2018, and accurately states that the overall prevalence in both men and women met this goal.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 54, which is the expected page number where the answer is located in the source document.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q28",
+      "Question": "What was the age-adjusted prevalence of hypertension among US adults in 2017-2018, and how was hypertension defined?",
+      "ExpectedAnswer": "The age-adjusted prevalence of hypertension among US adults in 2017-2018 was 45.4%. Hypertension was defined as blood pressure greater than or equal to 130/80 mmHg, or currently taking medication to lower blood pressure.",
+      "ExpectedPageNumbers": [
+        57
+      ],
+      "Category": "numeric",
+      "ActualAnswer": "Based on the provided documents:\n\n**Age-Adjusted Prevalence of Hypertension in 2017-2018:**\nThe overall age-adjusted prevalence of hypertension among U.S. adults aged 18 and over was 45.4% in 2017-2018.\n\n**Definition of Hypertension:**\nHypertension was defined as BP \u003E 130/80 mmHg or currently taking medication to lower high blood pressure.",
+      "ActualCitedPages": [
+        60,
+        57
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer matches the reference answer precisely: it reports the age-adjusted prevalence as 45.4% and defines hypertension identically as BP \u2265 130/80 mmHg or currently taking medication to lower blood pressure, with no fabrications or contradictions.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "Page 57 is listed among the system\u0027s cited pages (57, 60) and is an expected page number where the true answer resides, satisfying the citation accuracy requirement.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q29",
+      "Question": "Which race/ethnicity group had the highest hypertension prevalence in 2017-2018?",
+      "ExpectedAnswer": "Non-Hispanic black adults had the highest hypertension prevalence, at 57.1%.",
+      "ExpectedPageNumbers": [
+        59
+      ],
+      "Category": "numeric",
+      "ActualAnswer": "Based on the provided documents, Non-Hispanic Black adults had the highest hypertension prevalence in 2017-2018 at 57.1%.",
+      "ActualCitedPages": [
+        59,
+        55
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer exactly matches the reference answer, correctly identifying Non-Hispanic Black adults as having the highest hypertension prevalence at 57.1% in 2017-2018.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 59, which is the expected page number where the answer is located in the source document.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q30",
+      "Question": "Why was NHANES 2020 data collection suspended, and where are the mobile exam center trailers now?",
+      "ExpectedAnswer": "All 2020 NHANES data collection was suspended on March 16, 2020, due to COVID-19. The NHANES mobile exam center (MEC) trailers were parked in Maryland, with plans to resume field operations once prudent from a public health and logistical perspective.",
+      "ExpectedPageNumbers": [
+        63
+      ],
+      "Category": "factual",
+      "ActualAnswer": "NHANES 2020 data collection was suspended on March 16 due to COVID-19. The mobile exam center (MEC) trailers are now parked in Maryland.",
+      "ActualCitedPages": [
+        63
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 4,
+          "faithfulness_reasoning": "The system\u0027s answer captures the key facts (suspension date of March 16, COVID-19 cause, MEC trailers in Maryland) but omits the reference answer\u0027s detail about \u0027plans to resume field operations once prudent from a public health and logistical perspective,\u0027 which is a supporting contextual element present in the source.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 63, which matches exactly with the expected page number(s) provided.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q31",
+      "Question": "How did NHANES assist with the COVID-19 response?",
+      "ExpectedAnswer": "NHANES assisted with COVID-19 response through deployment of NHANES staff for contact tracing, quarantine stations, and FEMA\u0027s National Response Coordination Center; by offering trailers/trucks for COVID-19 testing (including transferring a truck to DC\u0027s Department of Forensic Sciences for mobile testing); through serology testing for SARS-CoV-2; and by providing burden estimates for severe obesity and other health conditions.",
+      "ExpectedPageNumbers": [
+        64
+      ],
+      "Category": "factual",
+      "ActualAnswer": "NHANES assisted with the COVID-19 response in the following ways:\n\n1. **Deployment of NHANES staff** - Staff were deployed for contact tracing, quarantine station operations, and support to the FEMA National Response Coordination Center (NRCC).\n\n2. **Trailers and trucks for COVID-19 testing** - NHANES offered the use of CLIA certified lab trailers/trucks to the Department of Health (DOH) in New York, Maryland, and DC. On 4/24, they transferred a truck to DC\u0027s Department of Forensic Sciences for mobile testing of DC residents.\n\n3. **Serology testing for SARS-CoV-2** - NHANES conducted serology testing for the virus.\n\n4. **Burden estimates** - NHANES provided burden estimates for severe obesity and other health conditions.",
+      "ActualCitedPages": [
+        64
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer comprehensively and accurately covers all four key ways NHANES assisted with COVID-19 response (staff deployment, trailers/trucks for testing, serology testing, and burden estimates) with consistent and faithful details matching the reference answer, including the specific mention of DC\u0027s Department of Forensic Sciences and the date 4/24.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The system cited page 64, which is an exact match with the expected page number(s) where the reference answer originates.",
+          "overall_pass": true
+        }
+      }
+    },
+    {
+      "Id": "q32",
+      "Question": "What is NHANES planning for its next survey design, according to the webinar?",
+      "ExpectedAnswer": "NHANES is planning for a return to data collection and for a new 2023 survey design and data collection period, in addition to continuing data QC, editing, release of earlier cycles, and publications.",
+      "ExpectedPageNumbers": [
+        65
+      ],
+      "Category": "factual",
+      "ActualAnswer": "According to the webinar, NHANES is planning for a new 2023 survey design and data collection period.",
+      "ActualCitedPages": [
+        65
+      ],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": true,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 3,
+          "faithfulness_reasoning": "The system\u0027s answer correctly identifies the 2023 survey design and data collection period plan, but omits significant details from the reference answer including the return to data collection, continuation of data QC, editing, release of earlier cycles, and publications.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "The cited page number 65 matches exactly with the expected page number(s) provided, correctly identifying where the answer is found in the source document.",
+          "overall_pass": false
+        }
+      }
+    },
+    {
+      "Id": "q33",
+      "Question": "Does the NHANES webinar mention anything about President Trump\u0027s immigration policy?",
+      "ExpectedAnswer": "No. The document does not mention President Trump or immigration policy anywhere in its content -- it is exclusively about the NHANES health survey, its methodology, and health data findings.",
+      "ExpectedPageNumbers": null,
+      "Category": "not_found",
+      "ActualAnswer": "I could not find this information in the provided documents.\n\n\nThe provided context contains information about the NHANES webinar title, presenter, date, and website content, but does not include any discussion of President Trump\u0027s immigration policy.",
+      "ActualCitedPages": [],
+      "AnswerSource": "Document",
+      "ChunksRetrieved": 5,
+      "ApiCallSucceeded": true,
+      "ApiError": null,
+      "RetrievalHit": false,
+      "JudgeScores": {
+        "haiku": {
+          "faithfulness_score": 5,
+          "faithfulness_reasoning": "The system\u0027s answer correctly identifies that the information cannot be found in the provided documents, which precisely matches the reference answer that states the document does not mention President Trump or immigration policy.",
+          "citation_accuracy_score": 5,
+          "citation_accuracy_reasoning": "For a not-found question, the system appropriately provided no page citations (N/A), which is the correct response when information does not exist in the source material.",
+          "overall_pass": true
+        }
+      }
+    }
+  ]
+}

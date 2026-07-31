@@ -9,6 +9,8 @@ public class AnthropicOptions
     public int MaxTokens { get; set; } = 1500;
     public int RetryCount { get; set; } = 3;
     public int RetryDelayMs { get; set; } = 1000;
+
+    public double Temperature { get; set; } = 0;
 }
 
 public class QdrantOptions

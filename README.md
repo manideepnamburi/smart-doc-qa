@@ -22,7 +22,7 @@ via one config value, zero code changes).
 | 3 | Query rewriting, smart folder ingest/delete (priority-based), SQLite document registry | ✅ Done |
 | 4 | Claude-as-reranker, table extraction (Azure Doc Intelligence), chart extraction (PDFtoImage + Claude Vision) | ✅ Done |
 | 5 | Neo4j knowledge graph — Claude-based entity extraction, Cypher MERGE ingestion, graph-augmented retrieval | ✅ Done |
-| 6 | Repo hygiene, unit tests, RAG eval harness (LLM-as-judge) | 🏗️ In progress |
+| 6 | Repo hygiene, unit tests, RAG eval harness (LLM-as-judge) | ✅ Done |
 | 6.5–12 | Guardrails, chat UI, agentic mode + MCP server, dual-mode local/Azure config, Redis cache, Azure deployment + LLMOps, multi-tenancy, auth, UI polish | 📋 Planned |
 
 Real numbers from ingesting a 67-page NHANES health survey PDF: **688 entities extracted → ~335 unique
@@ -193,6 +193,27 @@ All prompts live in `src/SmartDocQA.API/Prompts/` — edit without recompiling:
 
 ---
 
+## Evaluation Harness (`eval/`)
+
+A configurable RAG eval suite that runs a hand-written golden Q&A dataset against the live API and
+scores results on three dimensions: retrieval hit-rate (deterministic), and faithfulness + citation
+accuracy (LLM-as-judge, via a configurable Claude/OpenAI judge — deliberately not the same model
+used for answer synthesis, to avoid same-model leniency bias).
+
+Current state on the NHANES webinar dataset (33 hand-written questions, temperature=0 for full
+reproducibility): **29/33 passing (87.9%)**, **93.9% retrieval hit-rate**, **5.00/5 average citation
+accuracy**. All 4 failures are understood and documented in the golden dataset's `notes` fields —
+two are the short-chunk retrieval pattern described below, two are answer-completeness gaps where
+the system's answer is factually correct but omits a secondary detail present in the reference.
+
+The harness is designed as a genuine regression gate, not a one-off report: pinning `temperature=0`
+across every LLM call (see `AnthropicOptions.Temperature`) makes results byte-for-byte reproducible
+run to run, and the runner exits non-zero below a configurable pass-rate threshold — ready to wire
+into CI/CD ahead of a merge, once that phase is reached. See `eval/README.md` for setup and how to
+add new judges or documents.
+
+---
+
 ## Known Issues / Cleanup Debt
 
 Being upfront about what's rough around the edges:
@@ -200,6 +221,23 @@ Being upfront about what's rough around the edges:
 - **`InfrastructureStubs.cs`** contains the real, working Qdrant vector store adapter and dense
   retriever — not stubs. Left over from early scaffolding; naming will be split into properly
   named files (`Neo4jGraphStore.cs`, `QdrantVectorStoreAdapter.cs`, etc.) during the Phase 6 cleanup pass.
+- **Short/title-like chunks underperform in retrieval, even when they contain the exact answer.**
+  Confirmed via the eval harness (`eval/`) at temperature=0, reproducible across runs: a query for
+  "what does NHANES stand for" fails even though the source document's own title slide spells out
+  the full name directly — the short, title-like chunk consistently loses out to longer prose
+  chunks that merely mention the term in passing. This is the same underlying pattern as the
+  graph-chunk arrow-notation bias below, just showing up in ordinary text chunking instead of the
+  knowledge graph: chunks whose *structure* differs from typical prose (titles, table rows,
+  `X --rel--> Y` graph notation, chart-derived captions) score lower in retrieval/reranking than
+  prose of similar topical relevance, independent of how directly they answer the question. Planned
+  investigation: test whether prepending page/section titles to every chunk's embedded text (not
+  just standalone title chunks) closes this gap.
+- **`AnswerSource` is set based on whether chunks were retrieved, not whether the final answer
+  actually used them.** Confirmed three times independently via the eval harness: the synthesizer
+  will write "I could not find this information..." while still returning `AnswerSource: Document`
+  instead of `NotFound`. Cosmetic (doesn't affect the answer text itself) but worth fixing in
+  `ClaudeAnswerSynthesizer`, since downstream consumers may reasonably assume `AnswerSource:
+  Document` means citations are present and trustworthy.
 - **Graph-chunk reranking bias:** chunks describing graph relationships in arrow notation
   (`X --published_by--> Y`) consistently score lower with the Claude reranker than natural-prose
   chunks, even when the graph data is more accurate. Planned fix: rewrite graph descriptions as
@@ -233,7 +271,11 @@ Being upfront about what's rough around the edges:
 
 ## Next Up
 
-Phase 6 in progress: repository hygiene (done), unit tests for RRF fusion / chunking / priority
-ingest logic, and a RAG evaluation harness — a golden dataset of ~30–50 NHANES Q&A pairs scored via
-LLM-as-judge on retrieval hit-rate, answer faithfulness, and citation accuracy, gating each future
-phase merge.
+Phase 6 complete: repository hygiene, unit tests (RRF fusion, chunking — including a real
+infinite-loop bug caught and fixed by the test suite), and a reproducible eval harness with 87.9%
+pass rate on a 33-question golden dataset. Two genuine findings from the eval process are tracked
+above in Known Issues rather than quietly fixed away, since they're representative limitations
+worth understanding, not just numbers to chase.
+
+Next: Phase 6.5 (guardrails), then Phase 7 (chat UI) and Phase 7.5 (agentic mode + MCP server) per
+the roadmap in project planning notes.
