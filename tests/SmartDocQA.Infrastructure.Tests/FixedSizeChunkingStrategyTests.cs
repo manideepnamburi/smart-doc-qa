@@ -56,6 +56,7 @@ public class FixedSizeChunkingStrategyTests
         // 10 words, TokenSize=6, Overlap=2 -> step = 4.
         // Chunk 0: words[0..6)  = word0 word1 word2 word3 word4 word5
         // Chunk 1: words[4..10) = word4 word5 word6 word7 word8 word9
+        // Chunk 2: words[8..10) = word8 word9  (short tail remainder, start=8 < 10)
         // Overlap region should be word4, word5 -- present at the END of chunk 0
         // and the START of chunk 1.
         var strategy = CreateStrategy(tokenSize: 6, overlap: 2);
@@ -65,10 +66,11 @@ public class FixedSizeChunkingStrategyTests
         // Act
         var chunks = await strategy.ChunkAsync(document, "doc-1");
 
-        // Assert
-        Assert.Equal(2, chunks.Count);
+        // Assert: 3 chunks total, including the short tail remainder
+        Assert.Equal(3, chunks.Count);
         Assert.Equal("word0 word1 word2 word3 word4 word5", chunks[0].Content);
         Assert.Equal("word4 word5 word6 word7 word8 word9", chunks[1].Content);
+        Assert.Equal("word8 word9", chunks[2].Content);
 
         // The actual overlapping words, verified word-for-word, not just counted
         Assert.EndsWith("word4 word5", chunks[0].Content);
