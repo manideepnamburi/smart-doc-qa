@@ -37,7 +37,7 @@ namespace SmartDocQA.Application.UseCases;
 /// the document still gets ingested with whatever succeeded, and the
 /// failure is logged so it's visible, not silent.
 /// </summary>
-public class IngestDocumentUseCase
+public class IngestDocumentUseCase : IIngestDocumentUseCase
 {
     // ── Dependencies (all interfaces — Clean Architecture: this class
     //    depends on ABSTRACTIONS, never on concrete Qdrant/Neo4j/Claude

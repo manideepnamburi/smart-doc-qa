@@ -1,0 +1,35 @@
+[2026-07-29 09:39:53] === Key health check started ===
+[2026-07-29 09:39:53] AUTH FAILURE: Anthropic (main API + eval judge) - 401 Unauthorized - key is invalid or revoked
+[2026-07-29 09:39:53] SKIP: Azure OpenAI (embeddings) (disabled in config)
+[2026-07-29 09:39:53] SKIP: OpenAI (disabled in config)
+[2026-07-29 09:39:53] ERROR: failed to send alert email - Exception calling "Send" with "1" argument(s): "The SMTP server requires a secure connection or the client was not authenticated. The server response was: 5.7.0 Authentication Required. For more information, go to"
+[2026-07-29 09:39:53] === Key health check finished ===
+[2026-07-29 09:39:53] 
+[2026-07-29 09:43:10] === Key health check started ===
+[2026-07-29 09:43:10] OK: Anthropic (main API + eval judge) - key is valid
+[2026-07-29 09:43:10] SKIP: Azure OpenAI (embeddings) (disabled in config)
+[2026-07-29 09:43:10] SKIP: OpenAI (disabled in config)
+[2026-07-29 09:43:10] All checked keys are valid. No alert sent.
+[2026-07-29 09:43:10] === Key health check finished ===
+[2026-07-29 09:43:10] 
+[2026-07-29 09:43:45] === Key health check started ===
+[2026-07-29 09:43:45] AUTH FAILURE: Anthropic (main API + eval judge) - 401 Unauthorized - key is invalid or revoked
+[2026-07-29 09:43:45] SKIP: Azure OpenAI (embeddings) (disabled in config)
+[2026-07-29 09:43:45] SKIP: OpenAI (disabled in config)
+[2026-07-29 09:43:45] ERROR: failed to send alert email - Exception calling "Send" with "1" argument(s): "The SMTP server requires a secure connection or the client was not authenticated. The server response was: 5.7.0 Authentication Required. For more information, go to"
+[2026-07-29 09:43:45] === Key health check finished ===
+[2026-07-29 09:43:45] 
+[2026-07-29 09:50:58] === Key health check started ===
+[2026-07-29 09:50:58] AUTH FAILURE: Anthropic (main API + eval judge) - 401 Unauthorized - key is invalid or revoked
+[2026-07-29 09:50:58] SKIP: Azure OpenAI (embeddings) (disabled in config)
+[2026-07-29 09:50:58] SKIP: OpenAI (disabled in config)
+[2026-07-29 09:50:58] ERROR: failed to send alert email - Exception calling "Send" with "1" argument(s): "The SMTP server requires a secure connection or the client was not authenticated. The server response was: 5.7.0 Authentication Required. For more information, go to"
+[2026-07-29 09:50:58] === Key health check finished ===
+[2026-07-29 09:50:58] 
+[2026-07-29 09:55:43] === Key health check started ===
+[2026-07-29 09:55:43] AUTH FAILURE: Anthropic (main API + eval judge) - 401 Unauthorized - key is invalid or revoked
+[2026-07-29 09:55:43] SKIP: Azure OpenAI (embeddings) (disabled in config)
+[2026-07-29 09:55:43] SKIP: OpenAI (disabled in config)
+[2026-07-29 09:55:43] ERROR: failed to send alert email - Exception calling "Send" with "1" argument(s): "The SMTP server requires a secure connection or the client was not authenticated. The server response was: 5.7.0 Authentication Required. For more information, go to"
+[2026-07-29 09:55:43] === Key health check finished ===
+[2026-07-29 09:55:43] 

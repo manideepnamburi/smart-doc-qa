@@ -1,0 +1,26 @@
+{
+  "keysToCheck": [
+    {
+      "name": "Anthropic (main API + eval judge)",
+      "provider": "anthropic",
+      "apiKeyEnvVar": "ANTHROPIC_API_KEY",
+      "model": "claude-haiku-4-5-20251001",
+      "enabled": true
+    },
+    {
+      "name": "Azure OpenAI (embeddings)",
+      "provider": "azureopenai",
+      "apiKeyEnvVar": "AZURE_OPENAI_API_KEY",
+      "endpointEnvVar": "AZURE_OPENAI_ENDPOINT",
+      "deploymentEnvVar": "AZURE_OPENAI_EMBEDDING_DEPLOYMENT",
+      "enabled": false
+    },
+    {
+      "name": "OpenAI",
+      "provider": "openai",
+      "apiKeyEnvVar": "OPENAI_API_KEY",
+      "model": "gpt-4o-mini",
+      "enabled": false
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "provider": "smtp",
+  "smtpHost": "smtp.gmail.com",
+  "smtpPort": 587,
+  "useSsl": true,
+  "fromAddress": "namburimandeep@gmail.com",
+  "toAddress": "namburimandeep@gmail.com",
+  "credentialEnvVar": "KEYCHECK_SMTP_PASSWORD"
+}

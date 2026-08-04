@@ -1,5 +1,6 @@
 using SmartDocQA.Application.UseCases;
 using SmartDocQA.Infrastructure.DependencyInjection;
+using SmartDocQA.Domain.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,16 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 // ── Application Use Cases ─────────────────────────────────────────────────────
 builder.Services.AddScoped<IngestDocumentUseCase>();
+builder.Services.AddScoped<IngestFolderUseCase>();
+builder.Services.AddScoped<QueryDocumentUseCase>();
+builder.Services.AddScoped<DeleteDocumentsUseCase>();
+
+// NEW: also expose it via the interface, resolving to the SAME scoped
+// instance as the line above — this is what lets DocumentsController keep
+// injecting the concrete IngestDocumentUseCase directly (unchanged) while
+// IngestFolderUseCase injects the new IIngestDocumentUseCase, without
+// creating two separate instances per request.
+builder.Services.AddScoped<IIngestDocumentUseCase>(sp => sp.GetRequiredService<IngestDocumentUseCase>());
 builder.Services.AddScoped<IngestFolderUseCase>();
 builder.Services.AddScoped<QueryDocumentUseCase>();
 builder.Services.AddScoped<DeleteDocumentsUseCase>();

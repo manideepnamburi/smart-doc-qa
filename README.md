@@ -206,6 +206,11 @@ accuracy**. All 4 failures are understood and documented in the golden dataset's
 two are the short-chunk retrieval pattern described below, two are answer-completeness gaps where
 the system's answer is factually correct but omits a secondary detail present in the reference.
 
+The full unit test suite (separate from the eval harness above) covers RRF fusion, chunking
+(including a real infinite-loop bug caught and fixed), BM25's IDF/TF/length-normalization math
+(hand-verified against the formula), and the delete/ingest priority orchestration logic — **45
+tests, all passing**.
+
 The harness is designed as a genuine regression gate, not a one-off report: pinning `temperature=0`
 across every LLM call (see `AnthropicOptions.Temperature`) makes results byte-for-byte reproducible
 run to run, and the runner exits non-zero below a configurable pass-rate threshold — ready to wire
@@ -238,6 +243,8 @@ Being upfront about what's rough around the edges:
   instead of `NotFound`. Cosmetic (doesn't affect the answer text itself) but worth fixing in
   `ClaudeAnswerSynthesizer`, since downstream consumers may reasonably assume `AnswerSource:
   Document` means citations are present and trustworthy.
+- **`IngestFolderUseCase` has an un-abstracted filesystem read.** Its own `IFolderScanner` dependency is properly interfaced and fakeable, but `ProcessFileAsync` also calls `new FileInfo(filePath).Length` directly to get file size for the registry — a second, separate real filesystem touch that isn't behind any abstraction. Surfaced by its own unit tests: tests expecting successful ingestion need a real (even if empty) file on disk, unlike `DeleteDocumentsUseCase`'s tests, which are 100% fake-based with no real I/O at all. Not a bug — the file-size read is legitimate — but worth extracting behind an interface (e.g. `IFileSizeProvider`) in a future pass for full testability parity with the rest of the use cases.
+- **`BM25KeywordIndex` doesn't filter stopwords** ("the", "and", "as", ...) — every word gets indexed and stored as real rows, relying entirely on the IDF math to neutralize common words at search time (proven correct by `BM25KeywordIndexTests`) rather than skipping them at index time. Safe, but wasteful at scale — potentially millions of low-value rows for common words alone at the 600,000-chunk scale mentioned in the SQLite design rationale above. A future optimization, not a correctness issue.
 - **Graph-chunk reranking bias:** chunks describing graph relationships in arrow notation
   (`X --published_by--> Y`) consistently score lower with the Claude reranker than natural-prose
   chunks, even when the graph data is more accurate. Planned fix: rewrite graph descriptions as

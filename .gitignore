@@ -18,3 +18,5 @@ data_vault/
 # Visual Studio local state
 .vs/
 *.user
+eval/run-eval.local.ps1
+tools/key-health-check/run-key-check.local.ps1

@@ -28,13 +28,13 @@ public class IngestFolderUseCase
 {
     private readonly IFolderScanner _folderScanner;
     private readonly IDocumentRegistry _registry;
-    private readonly IngestDocumentUseCase _ingestDocumentUseCase;
+    private readonly IIngestDocumentUseCase _ingestDocumentUseCase;
     private readonly ILogger<IngestFolderUseCase> _logger;
 
     public IngestFolderUseCase(
         IFolderScanner folderScanner,
         IDocumentRegistry registry,
-        IngestDocumentUseCase ingestDocumentUseCase,
+        IIngestDocumentUseCase ingestDocumentUseCase,
         ILogger<IngestFolderUseCase> logger)
     {
         _folderScanner         = folderScanner;
