@@ -146,3 +146,48 @@ public class BM25Options
     /// </summary>
     public string DatabasePath { get; set; } = "bm25/bm25.db";
 }
+
+/// <summary>
+/// Phase 6.5 Guardrails config. Each check has its own on/off flag so they
+/// can be enabled one at a time during testing without touching code —
+/// just flip the flag in appsettings.json, matching the config-driven
+/// pattern used everywhere else in this project (UseReranking,
+/// UseGraphRetrieval, etc.).
+///
+/// All default to FALSE deliberately: guardrails should be an explicit,
+/// deliberate opt-in per check as each is verified working, not silently
+/// active the moment this class exists.
+/// </summary>
+public class GuardrailOptions
+{
+    public const string SectionName = "Guardrails";
+ 
+    // ── Input guardrails ──────────────────────────────────────────────────
+    public bool EnablePromptInjectionCheck { get; set; } = false;
+    public bool EnablePiiScrubCheck { get; set; } = false;
+    public bool EnableOffTopicCheck { get; set; } = false;
+ 
+    /// <summary>
+    /// Minimum top-1 similarity score (cosine) a question must have against
+    /// the ingested document collection to be considered "on topic."
+    /// Below this, the off-topic guardrail rejects the question before any
+    /// further pipeline work happens. Tune based on your embedding model —
+    /// start conservative (low threshold) and raise it if legitimate
+    /// questions are being rejected.
+    /// </summary>
+    public float OffTopicSimilarityThreshold { get; set; } = 0.3f;
+ 
+    // ── Output guardrails ──────────────────────────────────────────────────
+    public bool EnableGroundingCheck { get; set; } = false;
+ 
+    // ── Check 5: LLM safety classifier (most expensive, fully optional) ────
+    public bool EnableLlmSafetyCheck { get; set; } = false;
+ 
+    /// <summary>
+    /// Which model runs the safety classification call. Deliberately
+    /// separate from AnthropicOptions.ChatModel -- a classification task
+    /// doesn't need your best/most expensive model. Defaults to a cheap,
+    /// fast Claude model; change based on your budget/accuracy trade-off.
+    /// </summary>
+    public string LlmSafetyCheckModel { get; set; } = "claude-haiku-4-5-20251001";
+}

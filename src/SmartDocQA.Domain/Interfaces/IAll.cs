@@ -191,14 +191,26 @@ public interface IReranker
 
 // ─── LLM + Generation ────────────────────────────────────────────────────────
 
-/// <summary>
-/// Raw LLM client — wraps Claude HTTP API today, swappable to OpenAI, Azure OpenAI.
-/// </summary>
+//To(only CompleteAsync's signature changes -- one new optional parameter,
+// defaulting to null so every EXISTING call site compiles and behaves
+// identically without any changes):
+//
 public interface ILlmClient
 {
-    Task<string> CompleteAsync(string systemPrompt, string userPrompt, CancellationToken ct = default);
-    Task<string> CompleteWithVisionAsync(string systemPrompt, string userPrompt, byte[] imageBytes, CancellationToken ct = default);
+    /// <summary>
+    /// modelOverride: if provided, uses this exact model string instead of
+    /// the configured AnthropicOptions.ChatModel for this one call. Lets a
+    /// caller (e.g. a cheap safety-classifier guardrail) deliberately use a
+    /// faster/cheaper model than whatever the main synthesis pipeline uses,
+    /// without needing a second injected client or config section.
+    /// </summary>
+    Task<string> CompleteAsync(string systemPrompt, string userPrompt,
+        CancellationToken ct = default, string? modelOverride = null);
+
+    Task<string> CompleteWithVisionAsync(string systemPrompt, string userPrompt,
+        byte[] imageBytes, CancellationToken ct = default);
 }
+
 
 /// <summary>
 /// Loads prompt templates from the Prompts/ folder.
@@ -254,3 +266,39 @@ public interface IIngestDocumentUseCase
 {
     Task<DocumentMetadata> ExecuteAsync(DocumentSource source, CancellationToken ct = default);
 }
+
+// <summary>
+/// Result of a single guardrail check. Passed=false means the question (for
+/// input guardrails) or answer (for output guardrails) failed this specific
+/// check, with Reason explaining why in human-readable form.
+/// </summary>
+public record GuardrailResult(bool Passed, string? Reason = null)
+{
+    /// <summary>Convenience factory — most checks either pass cleanly or fail with a reason.</summary>
+    public static GuardrailResult Pass() => new(true, null);
+    public static GuardrailResult Fail(string reason) => new(false, reason);
+}
+
+/// <summary>
+/// Checks the raw incoming question BEFORE any retrieval/synthesis work
+/// happens — this ordering matters for cost: a rejected question never
+/// triggers an embedding call, retrieval, or a Claude synthesis call.
+/// Multiple implementations can be registered (prompt injection, PII scrub,
+/// off-topic detection); QueryDocumentUseCase runs all of them.
+/// </summary>
+public interface IInputGuardrail
+{
+    Task<GuardrailResult> CheckAsync(string question, CancellationToken ct = default);
+}
+
+/// <summary>
+/// Checks the synthesized answer AFTER the full pipeline has run, before
+/// it's returned to the caller — the last line of defense against an
+/// answer that's factually ungrounded, inappropriate, or otherwise unsafe
+/// to return as-is.
+/// </summary>
+public interface IOutputGuardrail
+{
+    Task<GuardrailResult> CheckAsync(QAResult result, CancellationToken ct = default);
+}
+

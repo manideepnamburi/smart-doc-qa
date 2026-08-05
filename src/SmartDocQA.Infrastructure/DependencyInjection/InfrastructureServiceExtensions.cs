@@ -12,6 +12,7 @@ using SmartDocQA.Infrastructure.Prompts;
 using SmartDocQA.Infrastructure.Registry;
 using SmartDocQA.Infrastructure.Retrieval;
 using Microsoft.Extensions.Logging;
+using SmartDocQA.Infrastructure.Guardrails;
 
 namespace SmartDocQA.Infrastructure.DependencyInjection;
 
@@ -48,6 +49,9 @@ public static class InfrastructureServiceExtensions
             configuration.GetSection(FolderScanOptions.SectionName));
         services.Configure<BM25Options>(
             configuration.GetSection(BM25Options.SectionName));
+        services.Configure<GuardrailOptions>(
+          configuration.GetSection(GuardrailOptions.SectionName));
+
 
         var ragOptions      = configuration.GetSection(RagOptions.SectionName).Get<RagOptions>() ?? new();
         var chunkingOptions = configuration.GetSection(ChunkingOptions.SectionName).Get<ChunkingOptions>() ?? new();
@@ -157,6 +161,19 @@ public static class InfrastructureServiceExtensions
 
         // ── Document Repository ───────────────────────────────────────────────
         services.AddScoped<IDocumentRepository, CompositeDocumentRepository>();
+
+        // ── Guardrails (Phase 6.5) ────────────────────────────────────────────
+        // Multiple registrations against the same interface, same pattern as
+        // IDocumentSourceResolver above -- QueryDocumentUseCase resolves all
+        // of them as an IEnumerable and runs each one. Uncomment each line as
+        // its matching guardrail class is uncommented and tested.
+
+        services.AddScoped<IInputGuardrail, PromptInjectionGuardrail>();   // CHECK 1 -- active
+
+         services.AddScoped<IInputGuardrail, PiiScrubGuardrail>();       // CHECK 2 -- uncomment when ready
+         services.AddScoped<IOutputGuardrail, GroundingCheckGuardrail>(); // CHECK 3 -- uncomment when ready
+        services.AddScoped<IInputGuardrail, OffTopicGuardrail>();       // CHECK 4 -- uncomment when ready
+        services.AddScoped<IInputGuardrail, LlmSafetyGuardrail>();      // CHECK 5 -- uncomment LAST (most expensive; must stay last in this list so cheap checks run first)
 
         return services;
     }

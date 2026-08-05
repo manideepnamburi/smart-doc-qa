@@ -23,6 +23,7 @@ via one config value, zero code changes).
 | 4 | Claude-as-reranker, table extraction (Azure Doc Intelligence), chart extraction (PDFtoImage + Claude Vision) | ✅ Done |
 | 5 | Neo4j knowledge graph — Claude-based entity extraction, Cypher MERGE ingestion, graph-augmented retrieval | ✅ Done |
 | 6 | Repo hygiene, unit tests, RAG eval harness (LLM-as-judge) | ✅ Done |
+| 6.5 | Guardrails — input/output safety checks | ✅ Done |
 | 6.5–12 | Guardrails, chat UI, agentic mode + MCP server, dual-mode local/Azure config, Redis cache, Azure deployment + LLMOps, multi-tenancy, auth, UI polish | 📋 Planned |
 
 Real numbers from ingesting a 67-page NHANES health survey PDF: **688 entities extracted → ~335 unique
@@ -219,10 +220,67 @@ add new judges or documents.
 
 ---
 
+## Guardrails (Phase 6.5)
+
+Five independent safety checks, each with its own on/off flag in `appsettings.json`
+(`Guardrails` section) so they can be enabled incrementally and tuned per deployment
+without touching code. Input guardrails run *before* retrieval/synthesis — a rejected
+question never triggers an embedding call, retrieval, or a Claude synthesis call.
+Output guardrails run *after* synthesis, as a last check before the answer reaches
+the caller.
+
+| # | Check | Type | Cost | Catches |
+|---|---|---|---|---|
+| 1 | Prompt injection | Input | Free (regex) | Known attack phrasings — "ignore previous instructions," fake role markers, etc. |
+| 2 | PII scrub | Input | Free (regex) | SSNs, emails, phone numbers, credit card numbers in the question text |
+| 3 | Grounding check | Output | Free (logic only) | The exact `AnswerSource`/`Citations` inconsistency found during eval harness work — an answer claiming to be document-grounded with zero supporting citations |
+| 4 | Off-topic rejection | Input | 1 embedding + vector search | Questions unrelated to the ingested documents, rejected before the full pipeline runs |
+| 5 | LLM safety classifier | Input | 1 Claude API call (optional) | Paraphrased/novel attack framings that no fixed pattern list can cover — genuinely reads intent instead of matching text |
+
+**Design principle — cheap checks run first.** .NET resolves multiple interface
+registrations in the order they're registered; Checks 1–4 (free or nearly free) are
+registered before Check 5 (a real LLM call), so the expensive check only runs for
+questions that already passed every free check.
+
+**Check 5 is independently model-configurable** (`LlmSafetyCheckModel` in config) —
+deliberately separate from the main `AnthropicOptions.ChatModel`, so this check can run
+on a cheap/fast model (default: Haiku) regardless of what model powers answer quality.
+This required a small backward-compatible extension to `ILlmClient.CompleteAsync`
+(an optional `modelOverride` parameter, defaulting to the existing behavior for every
+other caller).
+
+**Fail-open by design (Check 5 only):** if the classifier call itself errors — network
+failure, timeout, malformed response — the question is allowed through rather than
+blocked, with a logged warning. Rationale: a guardrail-service outage shouldn't take
+down basic Q&A availability. One-line change to flip to fail-closed if a stricter
+default is preferred for a given deployment.
+
+---
+
 ## Known Issues / Cleanup Debt
 
 Being upfront about what's rough around the edges:
 
+- **Prompt-injection regex has an honest, inherent limitation.** It catches known/common
+  attack phrasings, but a determined attacker can paraphrase around any fixed pattern
+  list. Check 5 (LLM safety classifier) is the mitigation for this — it reads intent
+  rather than matching literal text — but it's optional and cost-gated, not a default-on
+  safety net.
+- **`LlmSafetyGuardrail` reads its prompt file directly via `File.ReadAllText`** instead
+  of going through the existing `IPromptLoader` abstraction every other Claude-calling
+  class in this codebase uses. Not a bug — it works correctly — but it's an
+  inconsistency worth fixing in a future pass (would also simplify testing, since
+  `IPromptLoader` is already fakeable while a raw file read requires the test project
+  to carry its own copy of the prompt file).
+- **`LlmSafetyGuardrailTests` (7 tests) depend on that same raw file read**, requiring
+  the test project to maintain its own copy of `guardrail_safety_check.txt` plus a
+  matching `CopyToOutputDirectory` build rule — fixing the `IPromptLoader` inconsistency
+  above would remove this duplication entirely.
+- **`OffTopicGuardrail`'s similarity threshold (`OffTopicSimilarityThreshold`, default
+  0.3) is a tunable knob, not a validated constant** — it hasn't been calibrated against
+  a labeled on-topic/off-topic dataset the way the eval harness's golden dataset
+  calibrates retrieval. Treat the default as a reasonable starting point, not a proven
+  value.
 - **`InfrastructureStubs.cs`** contains the real, working Qdrant vector store adapter and dense
   retriever — not stubs. Left over from early scaffolding; naming will be split into properly
   named files (`Neo4jGraphStore.cs`, `QdrantVectorStoreAdapter.cs`, etc.) during the Phase 6 cleanup pass.
@@ -280,9 +338,13 @@ Being upfront about what's rough around the edges:
 
 Phase 6 complete: repository hygiene, unit tests (RRF fusion, chunking — including a real
 infinite-loop bug caught and fixed by the test suite), and a reproducible eval harness with 87.9%
-pass rate on a 33-question golden dataset. Two genuine findings from the eval process are tracked
-above in Known Issues rather than quietly fixed away, since they're representative limitations
-worth understanding, not just numbers to chase.
+pass rate on a 33-question golden dataset.
 
-Next: Phase 6.5 (guardrails), then Phase 7 (chat UI) and Phase 7.5 (agentic mode + MCP server) per
-the roadmap in project planning notes.
+Phase 6.5 complete: five independent guardrails (prompt injection, PII scrub, grounding check,
+off-topic rejection, LLM safety classifier), each config-gated and independently testable — the
+grounding check directly hardens the exact `AnswerSource` bug the eval harness surfaced, closing
+the loop from "found via testing" to "prevented in production." 73/80 guardrail-area unit tests
+passing (7 known failures isolated to test-project prompt-file setup, tracked above).
+
+Next: Phase 7 (chat UI) and Phase 7.5 (agentic mode + MCP server) per the roadmap in project
+planning notes.

@@ -21,5 +21,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\SmartDocQA.Infrastructure\SmartDocQA.Infrastructure.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="Prompts\**\*.txt">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 
 </Project>

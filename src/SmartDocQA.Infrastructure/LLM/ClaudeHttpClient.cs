@@ -37,11 +37,12 @@ public class ClaudeHttpClient : ILlmClient
     public async Task<string> CompleteAsync(
         string systemPrompt,
         string userPrompt,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        string? modelOverride = null)
     {
         var payload = new
         {
-            model = _options.ChatModel,
+            model = modelOverride ?? _options.ChatModel,
             max_tokens = _options.MaxTokens,
             temperature = _options.Temperature,
             system = systemPrompt,
@@ -50,7 +51,6 @@ public class ClaudeHttpClient : ILlmClient
                 new { role = "user", content = userPrompt }
             }
         };
-
         return await SendAsync(payload, ct);
     }
 
