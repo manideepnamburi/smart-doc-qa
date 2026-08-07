@@ -6,19 +6,21 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.VectorData;
 using Microsoft.SemanticKernel.Connectors.Qdrant;
+using Neo4j.Driver;
 using OllamaSharp;
+using PDFtoImage;
 using Qdrant.Client;
+using SkiaSharp;
 using SmartDocQA.Application.Configuration;
 using SmartDocQA.Domain.Enums;
 using SmartDocQA.Domain.Interfaces;
 using SmartDocQA.Domain.Models;
 using SmartDocQA.Infrastructure.VectorStore;
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using PDFtoImage;
-using SkiaSharp;
-using Neo4j.Driver;
+using System.Linq;
 
 namespace SmartDocQA.Infrastructure;
 
@@ -65,12 +67,15 @@ public class NoOpChartExtractor : IChartExtractor
         => Task.FromResult(new List<ExtractedChart>());
 }
 
+
 public class PassthroughQueryRewriter : IQueryRewriter
 {
-    public Task<string> RewriteAsync(string originalQuery, CancellationToken ct = default)
-        => Task.FromResult(originalQuery);
+    public Task<string> RewriteAsync(
+        string originalQuery,
+        List<ConversationTurn>? history = null,
+        CancellationToken ct = default)
+        => Task.FromResult(originalQuery); // still ignores history -- rewriting is disabled entirely
 }
-
 // ─── Default Metadata Enricher ────────────────────────────────────────────────
 
 public class DefaultMetadataEnricher : IMetadataEnricher
@@ -868,30 +873,82 @@ public class ClaudeReranker : IReranker
     }
 }
 
-// ─── Claude Query Rewriter ────────────────────────────────────────────────────
+// query_rewrite.txt via IPromptLoader instead of a hardcoded inline prompt
+// -- fixing a dead-file inconsistency found while making this change --
+// and (2) resolves follow-up questions using conversation history):
 
 public class ClaudeQueryRewriter : IQueryRewriter
 {
     private readonly ILlmClient _llmClient;
+    private readonly IPromptLoader _promptLoader;
+    private readonly PromptsOptions _prompts;
+    private readonly RagOptions _ragOptions;
     private readonly ILogger<ClaudeQueryRewriter> _logger;
 
-    public ClaudeQueryRewriter(ILlmClient llmClient, ILogger<ClaudeQueryRewriter> logger)
+    public ClaudeQueryRewriter(
+        ILlmClient llmClient,
+        IPromptLoader promptLoader,
+        IOptions<PromptsOptions> prompts,
+        IOptions<RagOptions> ragOptions,
+        ILogger<ClaudeQueryRewriter> logger)
     {
         _llmClient = llmClient;
-        _logger    = logger;
+        _promptLoader = promptLoader;
+        _prompts = prompts.Value;
+        _ragOptions = ragOptions.Value;
+        _logger = logger;
     }
 
-    public async Task<string> RewriteAsync(string originalQuery, CancellationToken ct = default)
+    public async Task<string> RewriteAsync(
+        string originalQuery,
+        List<ConversationTurn>? history = null,
+        CancellationToken ct = default)
     {
-        var systemPrompt =
-            "You are a search query optimizer. Rewrite the user's question to improve " +
-            "document retrieval. Make it more specific and keyword-rich. " +
-            "Return ONLY the rewritten query — no explanation, no quotes.";
+        var template = _promptLoader.Load(_prompts.QueryRewrite);
+        var historyText = FormatHistory(history);
 
-        var rewritten = await _llmClient.CompleteAsync(systemPrompt, originalQuery, ct);
-        _logger.LogDebug("Query rewritten: '{Original}' → '{Rewritten}'",
-            originalQuery, rewritten.Trim());
+        var userPrompt = template
+            .Replace("{{history}}", historyText)
+            .Replace("{{question}}", originalQuery);
+
+        var rewritten = await _llmClient.CompleteAsync(
+            systemPrompt: "You are a search query optimizer. Return ONLY the rewritten query, no explanation.",
+            userPrompt: userPrompt,
+            ct: ct);
+
+        _logger.LogDebug("Query rewritten: '{Original}' → '{Rewritten}' (history turns used: {Count})",
+            originalQuery, rewritten.Trim(), history?.Count ?? 0);
+
         return rewritten.Trim();
+    }
+
+    // Caps how much history is actually USED regardless of how much the
+    // caller sends -- defensive against an unbounded/buggy client, keeps
+    // prompt size and cost predictable. Only the LAST N turns (most
+    // recent) matter for resolving a follow-up question; older turns add
+    // token cost without adding resolution value.
+    private string FormatHistory(List<ConversationTurn>? history)
+    {
+        if (history is null || history.Count == 0)
+            return "(no prior conversation -- this is the first question)";
+
+        var recentTurns = history
+            .TakeLast(_ragOptions.MaxHistoryTurns)
+            .ToList();
+
+        var sb = new System.Text.StringBuilder();
+        foreach (var turn in recentTurns)
+        {
+            sb.AppendLine($"User: {turn.Question}");
+            // Truncate historical answers -- the rewriter only needs enough
+            // of the answer to resolve pronouns/references, not the full
+            // text, which keeps this prompt small even after many turns.
+            var truncatedAnswer = turn.Answer.Length > 200
+                ? turn.Answer[..200] + "..."
+                : turn.Answer;
+            sb.AppendLine($"Assistant: {truncatedAnswer}");
+        }
+        return sb.ToString();
     }
 }
 
@@ -1130,12 +1187,12 @@ public class AzureDocIntelligenceTableExtractor : ITableExtractor
 public class ClaudeVisionChartExtractor : IChartExtractor
 {
     private readonly ILlmClient _llmClient;
+    private readonly VisionExtractionOptions _options;
     private readonly ILogger<ClaudeVisionChartExtractor> _logger;
 
     private const string SystemPrompt =
         "You are a document analysis assistant. You describe visual content " +
         "from document pages accurately and concisely for use in a search index.";
-
     private const string UserPrompt =
         "Analyze this document page image.\n" +
         "1. If it contains a chart, graph, or diagram: describe the data it shows — " +
@@ -1147,22 +1204,20 @@ public class ClaudeVisionChartExtractor : IChartExtractor
 
     public ClaudeVisionChartExtractor(
         ILlmClient llmClient,
+        IOptions<VisionExtractionOptions> options,
         ILogger<ClaudeVisionChartExtractor> logger)
     {
         _llmClient = llmClient;
+        _options = options.Value;
         _logger = logger;
     }
 
     public async Task<List<ExtractedChart>> ExtractChartsAsync(
         Stream stream, string fileName, CancellationToken ct = default)
     {
-        // Only PDFs can be rasterized by PDFium
         if (!fileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
             return new List<ExtractedChart>();
 
-        var results = new List<ExtractedChart>();
-
-        // Buffer PDF bytes — PDFium needs the full document
         byte[] pdfBytes;
         using (var ms = new MemoryStream())
         {
@@ -1175,53 +1230,83 @@ public class ClaudeVisionChartExtractor : IChartExtractor
             "Claude Vision: rendering {Pages} pages of {File} for chart/OCR analysis",
             pageCount, fileName);
 
+        // ── Step 1: Render all pages to PNG, SEQUENTIALLY ──────────────────
+        // PDFium (via PDFtoImage) isn't guaranteed thread-safe for concurrent
+        // renders against one document buffer, and rendering is fast/local
+        // anyway (no network wait) -- nothing to gain from parallelizing this
+        // part. The real bottleneck, and the only part worth parallelizing,
+        // is the network round-trip to Claude in Step 2 below.
+        var renderedPages = new List<(int PageIndex, byte[] PngBytes)>();
         for (int i = 0; i < pageCount; i++)
         {
             ct.ThrowIfCancellationRequested();
+            using var bitmap = Conversion.ToImage(pdfBytes, page: i,
+                options: new RenderOptions(Dpi: 120));
+            using var image = SKImage.FromBitmap(bitmap);
+            using var encoded = image.Encode(SKEncodedImageFormat.Png, 85);
+            renderedPages.Add((i, encoded.ToArray()));
+        }
 
-            // Render page i → PNG bytes (120 DPI keeps images well under API limits)
-            byte[] pngBytes;
-            using (var bitmap = Conversion.ToImage(pdfBytes, page: i,
-                       options: new RenderOptions(Dpi: 120)))
-            using (var image = SKImage.FromBitmap(bitmap))
-            using (var encoded = image.Encode(SKEncodedImageFormat.Png, 85))
-            {
-                pngBytes = encoded.ToArray();
-            }
+        // ── Step 2: Analyze pages CONCURRENTLY, capped by MaxConcurrency ───
+        // The actual fix: instead of each page waiting on the prior page's
+        // full network round-trip before starting, up to MaxConcurrency
+        // pages are in-flight to the Vision API at once. SemaphoreSlim caps
+        // how many -- tune _options.MaxConcurrency in appsettings.json
+        // against your account's real RPM, not by guessing.
+        var semaphore = new SemaphoreSlim(_options.MaxConcurrency);
+        var results = new ConcurrentBag<ExtractedChart>();
 
+        var tasks = renderedPages.Select(async page =>
+        {
+            await semaphore.WaitAsync(ct);
             try
             {
                 var description = await _llmClient.CompleteWithVisionAsync(
-                    SystemPrompt, UserPrompt, pngBytes, ct);
+                    SystemPrompt, UserPrompt, page.PngBytes, ct);
 
                 if (string.IsNullOrWhiteSpace(description) ||
                     description.Trim().Equals("NONE", StringComparison.OrdinalIgnoreCase))
                 {
-                    _logger.LogDebug("Page {Page}: no visual content", i + 1);
-                    continue;
+                    _logger.LogDebug("Page {Page}: no visual content", page.PageIndex + 1);
+                    return;
                 }
 
                 results.Add(new ExtractedChart(
-                    PageNumber: i + 1,
+                    PageNumber: page.PageIndex + 1,
                     Description: description.Trim(),
-                    ImageBytes: pngBytes));
+                    ImageBytes: page.PngBytes));
 
                 _logger.LogInformation(
                     "Page {Page}: visual content captured ({Length} chars)",
-                    i + 1, description.Length);
+                    page.PageIndex + 1, description.Trim().Length);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
+                // Same fail-soft behavior as before: one page's failure
+                // (timeout, transient error) doesn't take down the whole
+                // document's ingestion -- it's just skipped and logged.
                 _logger.LogWarning(ex,
                     "Vision analysis failed for page {Page} of {File} — skipping page",
-                    i + 1, fileName);
+                    page.PageIndex + 1, fileName);
             }
-        }
+            finally
+            {
+                semaphore.Release();
+            }
+        });
+
+        await Task.WhenAll(tasks);
+
+        // ConcurrentBag doesn't preserve insertion order -- re-sort by page
+        // number so downstream chunking/citation output is deterministic,
+        // same as the old sequential version guaranteed for free.
+        var orderedResults = results.OrderBy(r => r.PageNumber).ToList();
 
         _logger.LogInformation(
             "Claude Vision: {Count} pages with charts/scanned content in {File}",
-            results.Count, fileName);
-        return results;
+            orderedResults.Count, fileName);
+
+        return orderedResults;
     }
 }
 

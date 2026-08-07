@@ -229,12 +229,19 @@ public interface IAnswerSynthesizer
     Task<QAResult> SynthesizeAsync(QAQuery query, List<RankedChunk> rankedChunks, CancellationToken ct = default);
 }
 
+
 /// <summary>
-/// Rewrites ambiguous or vague queries for better retrieval.
+/// Rewrites ambiguous or vague queries for better retrieval. When
+/// conversation history is provided, also resolves follow-up questions
+/// ("what about women?") into fully self-contained search queries using
+/// that context.
 /// </summary>
 public interface IQueryRewriter
 {
-    Task<string> RewriteAsync(string originalQuery, CancellationToken ct = default);
+    Task<string> RewriteAsync(
+        string originalQuery,
+        List<ConversationTurn>? history = null,
+        CancellationToken ct = default);
 }
 
 /// <summary>
@@ -286,9 +293,19 @@ public record GuardrailResult(bool Passed, string? Reason = null)
 /// Multiple implementations can be registered (prompt injection, PII scrub,
 /// off-topic detection); QueryDocumentUseCase runs all of them.
 /// </summary>
+
 public interface IInputGuardrail
 {
-    Task<GuardrailResult> CheckAsync(string question, CancellationToken ct = default);
+    /// <summary>
+    /// fallbackToLLM: mirrors QAQuery.FallbackToLLM. When true, the caller
+    /// has explicitly opted into general-knowledge answers -- guardrails
+    /// that reject purely for being "off topic relative to the documents"
+    /// should respect that and pass the question through. Guardrails
+    /// checking for genuine safety concerns (prompt injection, PII,
+    /// harmful requests) must ignore this flag entirely and keep blocking
+    /// regardless -- this is a scope preference, not a safety override.
+    /// </summary>
+    Task<GuardrailResult> CheckAsync(string question, bool fallbackToLLM = false, CancellationToken ct = default);
 }
 
 /// <summary>

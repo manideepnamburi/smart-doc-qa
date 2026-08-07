@@ -66,6 +66,14 @@ public class RagOptions
     public int RRF_K { get; set; } = 60;
 
     /// <summary>
+    /// How many of the most recent conversation turns the query rewriter
+    /// actually uses to resolve follow-up questions, regardless of how
+    /// many turns the client sends. Keeps prompt size/cost bounded even
+    /// if a client sends a very long conversation history.
+    /// </summary>
+    public int MaxHistoryTurns { get; set; } = 5;
+
+    /// <summary>
     /// Minimum cosine similarity score for a chunk to pass to LLM.
     /// Range: 0.0 (no filter) to 1.0 (exact match only).
     /// Start at 0.5 — lower to 0.4 if too many "not found", raise to 0.6 to reduce hallucination.
@@ -161,12 +169,12 @@ public class BM25Options
 public class GuardrailOptions
 {
     public const string SectionName = "Guardrails";
- 
+
     // ── Input guardrails ──────────────────────────────────────────────────
     public bool EnablePromptInjectionCheck { get; set; } = false;
     public bool EnablePiiScrubCheck { get; set; } = false;
     public bool EnableOffTopicCheck { get; set; } = false;
- 
+
     /// <summary>
     /// Minimum top-1 similarity score (cosine) a question must have against
     /// the ingested document collection to be considered "on topic."
@@ -176,13 +184,13 @@ public class GuardrailOptions
     /// questions are being rejected.
     /// </summary>
     public float OffTopicSimilarityThreshold { get; set; } = 0.3f;
- 
+
     // ── Output guardrails ──────────────────────────────────────────────────
     public bool EnableGroundingCheck { get; set; } = false;
- 
+
     // ── Check 5: LLM safety classifier (most expensive, fully optional) ────
     public bool EnableLlmSafetyCheck { get; set; } = false;
- 
+
     /// <summary>
     /// Which model runs the safety classification call. Deliberately
     /// separate from AnthropicOptions.ChatModel -- a classification task
@@ -190,4 +198,29 @@ public class GuardrailOptions
     /// fast Claude model; change based on your budget/accuracy trade-off.
     /// </summary>
     public string LlmSafetyCheckModel { get; set; } = "claude-haiku-4-5-20251001";
+}
+
+/// <summary>
+/// CORS allowed origins, environment-driven so dev (Vite's default port)
+/// and production (a real domain, once deployed) need zero code changes --
+/// just a different appsettings value per environment.
+/// </summary>
+public class CorsOptions
+{
+    public const string SectionName = "Cors";
+    public string[] AllowedOrigins { get; set; } = Array.Empty<string>();
+}
+
+/// <summary>
+/// Controls how many pages the Claude Vision chart/OCR extractor analyzes
+/// concurrently during ingestion. Higher = faster ingest on large PDFs, but
+/// tune this against your Anthropic account's actual RPM (Console > Settings
+/// > Limits) -- too high triggers 429 rate-limit errors instead of the
+/// per-page timeouts you'd see today.
+/// </summary>
+public class VisionExtractionOptions
+{
+    public const string SectionName = "VisionExtraction";
+
+    public int MaxConcurrency { get; set; } = 5;
 }

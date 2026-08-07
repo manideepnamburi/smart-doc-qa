@@ -1,0 +1,425 @@
+/* App.css -- design system grounded in what this app actually does:
+   answer questions with visible, page-level evidence, and refuse to bluff
+   when it can't find something. The citation chips are the signature
+   element -- they make the AnswerSource distinction (grounded vs.
+   fallback vs. not-found) visible at a glance, not just logged data. */
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+:root {
+  --color-bg: #faf9f5;
+  --color-surface: #ffffff;
+  --color-ink: #1c1f2a;
+  --color-ink-muted: #5c6270;
+  --color-line: #e4e1d8;
+  --color-primary: #0891b2;
+  --color-primary-hover: #0e7490;
+  --color-verified: #059669;
+  --color-verified-bg: #e3f7ef;
+  --color-caution: #d97706;
+  --color-caution-bg: #fdf0e1;
+  --color-neutral: #8b8f9a;
+  --color-neutral-bg: #eeedea;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+/* Respect reduced-motion preference -- kills all transitions/animations
+   for anyone who's asked their OS not to show them. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.app {
+  max-width: 760px;
+  margin: 0 auto;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+}
+
+:root {
+  /* add these two new tokens alongside your existing ones */
+  --color-header-bg: #0E6B5C;
+  --color-input-bg: #14161F;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: var(--color-header-bg);
+  border-radius: 14px;
+  margin: 16px 16px 0;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-logo {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+}
+
+.app-header h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 21px;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: #FFFFFF;
+  line-height: 1.2;
+}
+
+.app-subtitle {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.72);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+.app-controls {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.app-controls .clear-button {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.app-controls .clear-button:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* ── Toggle switch, restyled for the dark teal header ── */
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+.toggle-track {
+  width: 34px;
+  height: 20px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.toggle-on .toggle-track {
+  background: #FFFFFF;
+  border-color: #FFFFFF;
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s, background 0.15s;
+}
+
+.toggle-on .toggle-thumb {
+  transform: translateX(14px);
+  background: var(--color-header-bg);
+}
+
+.toggle-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.toggle:focus-visible {
+  outline: 2px solid #FFFFFF;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.clear-button {
+  background: transparent;
+  border: 1px solid var(--color-line);
+  color: var(--color-ink-muted);
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.clear-button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.clear-button:focus-visible,
+.chat-input input:focus-visible,
+.chat-input button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.message-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.empty-state {
+  color: var(--color-ink-muted);
+  text-align: center;
+  margin-top: 80px;
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 380px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.message {
+  max-width: 82%;
+  animation: rise 0.2s ease-out;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message-user {
+  align-self: flex-end;
+}
+
+.message-user .message-content {
+  background: var(--color-primary);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 14px 14px 4px 14px;
+  line-height: 1.5;
+}
+
+.message-assistant {
+  align-self: flex-start;
+  width: 100%;
+}
+
+.message-assistant .message-content {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  padding: 14px 16px;
+  border-radius: 4px 14px 14px 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.message-role {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Answer source badge -- the "brain reading intent" of the design:
+   surfaces AnswerSource (Document / LLMFallback / NotFound) as a visible,
+   color-coded signal instead of a hidden API field. ── */
+.answer-source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.answer-source-badge.source-document {
+  background: var(--color-verified-bg);
+  color: var(--color-verified);
+}
+
+.answer-source-badge.source-fallback {
+  background: var(--color-caution-bg);
+  color: var(--color-caution);
+}
+
+.answer-source-badge.source-notfound {
+  background: var(--color-neutral-bg);
+  color: var(--color-neutral);
+}
+
+.answer-source-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ── Citation chips -- the signature element: monospace "index tabs"
+   pointing back to an exact page, reinforcing evidence-grounded answers ── */
+.message-citations {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.citation-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 9px;
+  border-radius: 5px;
+  background: var(--color-verified-bg);
+  color: var(--color-verified);
+  border-left: 2px solid var(--color-verified);
+  cursor: default;
+}
+
+.message-loading .message-content {
+  color: var(--color-ink-muted);
+  font-style: italic;
+}
+
+.message-loading .message-content::after {
+  content: "···";
+  display: inline-block;
+  margin-left: 4px;
+  animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.chat-input {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  background: var(--color-bg);
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  background: var(--color-input-bg);
+  color: #F2F2F5;
+}
+
+.chat-input input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.chat-input input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.chat-input button {
+  padding: 0 24px;
+  background: var(--color-input-bg);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.chat-input button:hover:not(:disabled) {
+  background: #22242f;
+}
+
+.chat-input button:disabled {
+  background: #3a3d4a;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+}
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .app-header {
+    padding: 16px 16px 12px;
+  }
+  .message-list {
+    padding: 16px;
+  }
+  .chat-input {
+    padding: 12px 16px 16px;
+  }
+  .message {
+    max-width: 92%;
+  }
+}
+

@@ -1,6 +1,7 @@
 using SmartDocQA.Application.UseCases;
 using SmartDocQA.Infrastructure.DependencyInjection;
 using SmartDocQA.Domain.Interfaces;
+using SmartDocQA.Application.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +51,31 @@ builder.Services.AddLogging(logging =>
 // ── Memory Cache ──────────────────────────────────────────────────────────────
 builder.Services.AddMemoryCache();
 
+//    Use Cases" -- binds the Cors config section and registers a CORS
+//    policy driven entirely by appsettings, so dev vs. production is just
+//    a config difference, never a code difference:
+
+builder.Services.Configure<CorsOptions>(
+    builder.Configuration.GetSection(CorsOptions.SectionName));
+
+builder.Services.Configure<VisionExtractionOptions>(
+    builder.Configuration.GetSection(VisionExtractionOptions.SectionName));
+
+builder.Services.AddCors(options =>
+{
+    var corsOptions = builder.Configuration
+        .GetSection(CorsOptions.SectionName)
+        .Get<CorsOptions>() ?? new CorsOptions();
+
+    options.AddPolicy("SmartDocQAWebClient", policy =>
+    {
+        policy.WithOrigins(corsOptions.AllowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+
 var app = builder.Build();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
@@ -60,6 +86,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("SmartDocQAWebClient");
 app.UseAuthorization();
 app.MapControllers();
 

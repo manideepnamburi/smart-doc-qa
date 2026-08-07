@@ -7,16 +7,11 @@ using SmartDocQA.Domain.Interfaces;
 namespace SmartDocQA.Infrastructure.Guardrails;
 
 // ═════════════════════════════════════════════════════════════════════════
-// CHECK 1 OF 4 — PROMPT INJECTION DETECTION (ACTIVE — test this one first)
+// CHECK 1 OF 4 — PROMPT INJECTION DETECTION (ACTIVE)
 //
-// Cheap, deterministic, zero external dependencies (no LLM call, no
-// embedding call) — this is pure pattern matching against known attack
-// phrasings. Honest limitation, documented here rather than hidden: a
-// determined attacker can paraphrase around any fixed pattern list. This
-// catches the common/naive injection attempts, not a sophisticated one.
-// A more thorough defense would add an LLM-based classifier as a second
-// layer (see the Known Issues note we'll add to the README once this is
-// tested) — deliberately out of scope for this first pass.
+// Cheap, deterministic, zero external dependencies. Ignores fallbackToLLM
+// entirely -- this is a SECURITY check, not a topic-scope check, so it
+// must never be bypassed by the "answer from general knowledge" toggle.
 // ═════════════════════════════════════════════════════════════════════════
 
 public class PromptInjectionGuardrail : IInputGuardrail
@@ -24,9 +19,6 @@ public class PromptInjectionGuardrail : IInputGuardrail
     private readonly GuardrailOptions _options;
     private readonly ILogger<PromptInjectionGuardrail> _logger;
 
-    // Known injection phrasings, case-insensitive. Each one is a real
-    // pattern seen in published prompt-injection attack writeups — this is
-    // not an exhaustive list, it's the common/obvious cases.
     private static readonly (Regex Pattern, string Description)[] InjectionPatterns =
     {
         (new Regex(@"ignore\s+(all\s+|the\s+)?(previous|prior|above)\s+instructions", RegexOptions.IgnoreCase),
@@ -53,10 +45,12 @@ public class PromptInjectionGuardrail : IInputGuardrail
         _logger = logger;
     }
 
-    public Task<GuardrailResult> CheckAsync(string question, CancellationToken ct = default)
+    public Task<GuardrailResult> CheckAsync(string question, bool fallbackToLLM = false, CancellationToken ct = default)
     {
         if (!_options.EnablePromptInjectionCheck)
             return Task.FromResult(GuardrailResult.Pass());
+
+        // fallbackToLLM is deliberately unused here -- see class docstring.
 
         foreach (var (pattern, description) in InjectionPatterns)
         {
@@ -75,22 +69,12 @@ public class PromptInjectionGuardrail : IInputGuardrail
     }
 }
 
-
-// CHECK 2 OF 4 — PII SCRUB (currently disabled — uncomment when ready to test)
+// ═════════════════════════════════════════════════════════════════════════
+// CHECK 2 OF 4 — PII SCRUB
 //
-// Same category as Check 1: cheap, deterministic regex matching, no LLM or
-// embedding call. Scans the QUESTION text (not the retrieved documents —
-// that's a different concern) for patterns that look like personal data,
-// and rejects outright rather than attempting to silently redact-and-
-// continue. Rejecting is the safer default: silently modifying what the
-// user asked risks confusing them about why the answer doesn't match their
-// actual question. A redact-and-continue variant is a reasonable future
-// enhancement, documented rather than built here.
-//
-// TO ACTIVATE: uncomment this whole class, then in
-// InfrastructureServiceExtensions.cs uncomment the matching
-// AddScoped<IInputGuardrail, PiiScrubGuardrail>() line, then set
-// "EnablePiiScrubCheck": true in appsettings.json.
+// Same security-check reasoning as Check 1: fallbackToLLM is ignored.
+// Personal data in the question is a problem whether or not general-
+// knowledge answers are allowed.
 // ═════════════════════════════════════════════════════════════════════════
 
 public class PiiScrubGuardrail : IInputGuardrail
@@ -114,19 +98,17 @@ public class PiiScrubGuardrail : IInputGuardrail
         _logger = logger;
     }
 
-    public Task<GuardrailResult> CheckAsync(string question, CancellationToken ct = default)
+    public Task<GuardrailResult> CheckAsync(string question, bool fallbackToLLM = false, CancellationToken ct = default)
     {
         if (!_options.EnablePiiScrubCheck)
             return Task.FromResult(GuardrailResult.Pass());
+
+        // fallbackToLLM is deliberately unused here -- see class docstring.
 
         foreach (var (pattern, description) in PiiPatterns)
         {
             if (pattern.IsMatch(question))
             {
-                // Deliberately do NOT log the actual matched PII value —
-                // only that a match of this type occurred. Logging the
-                // real SSN/email/etc. would defeat the entire point of
-                // this guardrail.
                 _logger.LogWarning(
                     "PII guardrail rejected a question containing what appears to be a {Description}.",
                     description);
@@ -140,32 +122,14 @@ public class PiiScrubGuardrail : IInputGuardrail
     }
 }
 
-
-
-// CHECK 4 OF 4 — OFF-TOPIC REJECTION (currently disabled — uncomment LAST,
-// after checks 1-3, since this one has real dependencies to wire up)
+// ═════════════════════════════════════════════════════════════════════════
+// CHECK 4 OF 4 — OFF-TOPIC REJECTION
 //
-// Unlike checks 1-2, this ISN'T free — it makes a real embedding call plus
-// a top-1 vector search, reusing the same IEmbeddingService and IVectorStore
-// already registered for the main retrieval pipeline (no new infrastructure
-// needed). Still meaningfully cheaper than letting the FULL pipeline run
-// (dense+sparse+graph retrieval, RRF fusion, reranking, and a Claude
-// synthesis call) only to discover nothing relevant exists — this check
-// fails fast after one cheap similarity lookup instead.
-//
-// Distinct from the existing "AnswerSource.NotFound" path: that happens
-// AFTER the full pipeline already ran and found nothing. This guardrail
-// rejects BEFORE any of that cost is incurred, and also catches a case the
-// existing path doesn't: if FallbackToLLM=true, an off-topic question would
-// otherwise get a full free-form answer from Claude's general knowledge —
-// this guardrail can reject it before that happens, if that's the desired
-// behavior for your use case.
-//
-// TO ACTIVATE: uncomment this whole class, then in
-// InfrastructureServiceExtensions.cs uncomment the matching
-// AddScoped<IInputGuardrail, OffTopicGuardrail>() line, then set
-// "EnableOffTopicCheck": true and tune "OffTopicSimilarityThreshold" in
-// appsettings.json.
+// The one check where fallbackToLLM DOES change behavior: if the caller
+// has explicitly opted into general-knowledge answers, "unrelated to the
+// documents" is no longer a rejection reason -- that's precisely what
+// FallbackToLLM=true means. Skipping here also saves the embedding call +
+// vector search entirely, not just the rejection.
 // ═════════════════════════════════════════════════════════════════════════
 
 public class OffTopicGuardrail : IInputGuardrail
@@ -187,9 +151,12 @@ public class OffTopicGuardrail : IInputGuardrail
         _logger = logger;
     }
 
-    public async Task<GuardrailResult> CheckAsync(string question, CancellationToken ct = default)
+    public async Task<GuardrailResult> CheckAsync(string question, bool fallbackToLLM = false, CancellationToken ct = default)
     {
         if (!_options.EnableOffTopicCheck)
+            return GuardrailResult.Pass();
+
+        if (fallbackToLLM)
             return GuardrailResult.Pass();
 
         var queryVector = await _embeddingService.EmbedAsync(question, ct);
@@ -210,4 +177,3 @@ public class OffTopicGuardrail : IInputGuardrail
         return GuardrailResult.Pass();
     }
 }
-

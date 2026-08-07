@@ -190,7 +190,8 @@ public class DocumentsController : ControllerBase
             UseGraph:         request.UseGraph,
             UseReranking:     request.UseReranking,
             FallbackToLLM:    request.FallbackToLLM,
-            DocumentIdFilter: request.DocumentIdFilter);
+            DocumentIdFilter: request.DocumentIdFilter,
+            History:          request.History);
 
         var result = await _queryUseCase.ExecuteAsync(query, ct);
         return Ok(result);
@@ -304,7 +305,8 @@ public record QueryRequest(
     bool UseGraph = false,
     bool UseReranking = false,
     bool FallbackToLLM = false,
-    string? DocumentIdFilter = null);
+    string? DocumentIdFilter = null,
+    List<ConversationTurn>? History = null);
 
 public record DeleteDocumentsRequest(
     /// <summary>

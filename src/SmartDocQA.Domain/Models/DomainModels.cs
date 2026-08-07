@@ -76,7 +76,8 @@ public record Citation(
 );
 
 
-// ─── Query + Result ───────────────────────────────────────────────────────────
+//existing direct-API caller -- Swagger, curl, the eval harness, every
+// guardrail test today -- is completely unaffected):
 
 public record QAQuery(
     string Question,
@@ -92,7 +93,15 @@ public record QAQuery(
     /// </summary>
     bool FallbackToLLM = false,
 
-    string? DocumentIdFilter = null   // scope to a specific document
+    string? DocumentIdFilter = null,
+
+    /// <summary>
+    /// Recent conversation turns, oldest first. Optional -- a request with
+    /// no history behaves exactly as it always has (no follow-up
+    /// resolution). Only the React chat UI populates this; direct API
+    /// testing is unaffected unless you choose to include it.
+    /// </summary>
+    List<ConversationTurn>? History = null
 );
 
 public record QAResult(
@@ -129,3 +138,13 @@ public record GraphRelationship(
     string RelationType,   // REPORTS_TO, MENTIONED_WITH, CAUSED_BY, etc.
     string DocumentId
 );
+
+
+/// <summary>
+/// One past exchange in an ongoing conversation. The client (React UI)
+/// holds the full conversation and resends recent turns with each new
+/// question -- the backend itself stays stateless, same as Anthropic's own
+/// Messages API. See README "Guardrails"/"Conversation" section for the
+/// full rationale once documented.
+/// </summary>
+public record ConversationTurn(string Question, string Answer);

@@ -79,7 +79,7 @@ public class QueryDocumentUseCase
         // retrieval, no Claude synthesis call happens for a rejected question.
         foreach (var guardrail in _inputGuardrails)
         {
-            var checkResult = await guardrail.CheckAsync(query.Question, ct);
+            var checkResult = await guardrail.CheckAsync(query.Question, query.FallbackToLLM, ct);
             if (!checkResult.Passed)
             {
                 sw.Stop();
@@ -104,8 +104,8 @@ public class QueryDocumentUseCase
 
         // ── Step 1: Rewrite query for better retrieval ────────────────────────
         var rewrittenQuery = _ragOptions.UseQueryRewriting
-            ? await _queryRewriter.RewriteAsync(query.Question, ct)
-            : query.Question;
+           ? await _queryRewriter.RewriteAsync(query.Question, query.History, ct)
+           : query.Question;
 
         _logger.LogDebug("Rewritten query: '{Rewritten}'", rewrittenQuery);
 

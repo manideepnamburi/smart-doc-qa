@@ -5,9 +5,10 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "DOTNET_SYSTEM_NET_DISABLEIPV6":"1"
+        "DOTNET_SYSTEM_NET_DISABLEIPV6": "1"
       },
-      "applicationUrl": "https://localhost:59776;http://localhost:59777"
+
+      "applicationUrl": "https://localhost:61500;http://localhost:61501"
     }
-  }
+    }
 }

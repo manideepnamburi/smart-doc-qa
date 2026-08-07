@@ -7,39 +7,24 @@ using SmartDocQA.Domain.Interfaces;
 
 namespace SmartDocQA.Infrastructure.Guardrails;
 
-
-// CHECK 5 OF 5 — LLM SAFETY CLASSIFIER (currently disabled — uncomment LAST,
-// after checks 1-4, since this is the most expensive check by far)
+// ═════════════════════════════════════════════════════════════════════════
+// CHECK 5 OF 5 — LLM SAFETY CLASSIFIER
 //
-// Unlike checks 1-4, this ISN'T free or even cheap — it's a real Claude API
-// call on every single question. This is the "brain reading intent" layer
-// discussed earlier: it catches paraphrased/novel attack phrasings that no
-// fixed regex list could ever cover, at the cost of latency + money on
-// every request. That's a genuine, deliberate trade-off, not a flaw —
-// that's exactly why it has its OWN enable flag and its OWN model choice
-// (LlmSafetyCheckModel), independent of AnthropicOptions.ChatModel. Default
-// model is a cheap/fast one (Haiku) since a safety classification task
-// doesn't need your best model — same reasoning as the eval harness's
-// judge model choice.
+// Real Claude API call on every question. Catches paraphrased/novel attack
+// framings no fixed regex list could cover. Own enable flag, own model
+// choice (LlmSafetyCheckModel), independent of AnthropicOptions.ChatModel.
 //
-// COST-ORDERING: this must be registered LAST among input guardrails (after
-// PromptInjection, PiiScrub, OffTopic) so cheap checks reject obvious cases
-// first, and this expensive LLM call only runs for questions that already
-// passed every free check. .NET's DI resolves IEnumerable<T> in
-// registration order, so registration order below directly controls this.
+// COST-ORDERING: must be registered LAST among input guardrails.
 //
-// FAIL-OPEN BY DESIGN: if the LLM call itself fails (network error,
-// timeout, malformed response), this guardrail logs a warning and PASSES
-// the question through rather than blocking it. Rationale: a guardrail
-// infrastructure outage shouldn't take down basic Q&A availability. If you
-// want the opposite (fail-closed -- reject on any classifier error), that's
-// a one-line change, flagged below at the catch block.
+// FAIL-OPEN BY DESIGN: classifier errors let the question through (logged
+// loudly), rather than blocking on infrastructure failure.
 //
-// TO ACTIVATE: uncomment this whole class, then in
-// InfrastructureServiceExtensions.cs uncomment the matching
-// AddScoped<IInputGuardrail, LlmSafetyGuardrail>() line (it must be the
-// LAST IInputGuardrail registration), then set "EnableLlmSafetyCheck": true
-// in appsettings.json.
+// fallbackToLLM interaction: an "off_topic" classification is a SCOPE
+// preference, not a security concern -- if the caller has opted into
+// general-knowledge answers, off-topic questions are allowed through.
+// Every other category (prompt_injection, harmful_request, other) is
+// still blocked regardless of this flag, since those are genuine safety
+// concerns that a scope preference must never override.
 // ═════════════════════════════════════════════════════════════════════════
 
 public class LlmSafetyGuardrail : IInputGuardrail
@@ -49,12 +34,6 @@ public class LlmSafetyGuardrail : IInputGuardrail
     private readonly ILogger<LlmSafetyGuardrail> _logger;
     private readonly string _promptTemplate;
 
-    // Hardcoded filename rather than a PromptsOptions config property --
-    // this one prompt doesn't need to be independently swappable via
-    // appsettings, keeping this guardrail self-contained. Lives at
-    // src/SmartDocQA.API/Prompts/guardrail_safety_check.txt (same Prompts/
-    // folder as every other prompt, already covered by the existing
-    // CopyToOutputDirectory rule in the API's .csproj -- no build changes needed).
     private const string PromptFileName = "guardrail_safety_check.txt";
 
     public LlmSafetyGuardrail(
@@ -76,7 +55,7 @@ public class LlmSafetyGuardrail : IInputGuardrail
         _promptTemplate = File.ReadAllText(promptPath);
     }
 
-    public async Task<GuardrailResult> CheckAsync(string question, CancellationToken ct = default)
+    public async Task<GuardrailResult> CheckAsync(string question, bool fallbackToLLM = false, CancellationToken ct = default)
     {
         if (!_options.EnableLlmSafetyCheck)
             return GuardrailResult.Pass();
@@ -95,11 +74,26 @@ public class LlmSafetyGuardrail : IInputGuardrail
 
             if (!classification.Safe)
             {
+                // Off-topic + explicit opt-in to general knowledge = allow.
+                // Every other unsafe category stays blocked no matter what.
+                if (classification.Category == "off_topic" && fallbackToLLM)
+                {
+                    _logger.LogInformation(
+                        "LLM safety guardrail classified question as off_topic but allowed it through (FallbackToLLM=true). Question: '{Question}'",
+                        question);
+                    return GuardrailResult.Pass();
+                }
+
                 _logger.LogWarning(
                     "LLM safety guardrail rejected question. Category={Category}, Reason={Reason}. Question: '{Question}'",
                     classification.Category, classification.Reason, question);
-                return GuardrailResult.Fail(
-                    $"Your question could not be processed ({classification.Category}): {classification.Reason}");
+
+                // Fixed double-message bug: this used to prepend "Your
+                // question could not be processed:" itself, which
+                // QueryDocumentUseCase's Step 0 ALSO prepends, resulting
+                // in that phrase appearing twice in the final response.
+                // Return only the specific reason here.
+                return GuardrailResult.Fail($"({classification.Category}) {classification.Reason}");
             }
 
             return GuardrailResult.Pass();
@@ -120,9 +114,6 @@ public class LlmSafetyGuardrail : IInputGuardrail
     {
         var text = rawResponse.Trim();
 
-        // Defensive stripping in case the model wraps its JSON in markdown
-        // fences despite being told not to -- same pattern as the eval
-        // harness's judge response parsing.
         if (text.StartsWith("```"))
         {
             text = text[(text.IndexOf('\n') + 1)..];
@@ -146,4 +137,3 @@ public class LlmSafetyGuardrail : IInputGuardrail
         public string Reason { get; set; } = "";
     }
 }
-
