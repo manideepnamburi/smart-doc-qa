@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using SmartDocQA.Application.Configuration;
 using SmartDocQA.Domain.Enums;
 using SmartDocQA.Domain.Interfaces;
+using SmartDocQA.Domain.Models;
 using SmartDocQA.Infrastructure.Chunking;
 using Xunit;
 

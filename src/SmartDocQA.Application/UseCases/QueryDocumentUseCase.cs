@@ -9,8 +9,8 @@ namespace SmartDocQA.Application.UseCases;
 
 /// <summary>
 /// Orchestrates the full query pipeline:
-/// [Input Guardrails] → Rewrite → Dense + Sparse + Graph Retrieve → RRF Fusion
-/// → Rerank → Synthesize → [Output Guardrails]
+/// [Input Guardrails] → Rewrite → IRetrievalPipeline (retrieve+fuse+rerank)
+/// → Synthesize → [Output Guardrails]
 ///
 /// FallbackToLLM flag flows through the entire pipeline untouched.
 /// The AnswerSynthesizer is responsible for deciding what to do when
@@ -23,15 +23,23 @@ namespace SmartDocQA.Application.UseCases;
 /// IEnumerable collections resolved by DI -- if zero guardrails are
 /// registered (or all are disabled via config), these loops are a no-op
 /// and the pipeline behaves exactly as it did before Phase 6.5.
+///
+/// RETRIEVAL PIPELINE EXTRACTION (Phase 7.5):
+/// What used to be four inline steps here (parallel dense+sparse+graph
+/// retrieve, RRF fusion, optional reranking, and retrieval-mode
+/// determination) now lives behind the IRetrievalPipeline abstraction,
+/// implemented today by HybridRetrievalPipeline. This class no longer
+/// knows or cares HOW retrieval happens -- it only knows "give me a
+/// query, get back ranked chunks." This was extracted specifically so
+/// the new agentic query pipeline (AgentQueryUseCase) can reuse the exact
+/// same retrieval behavior, once per sub-question, without duplicating
+/// this logic. See IRetrievalPipeline's XML doc comment for the full
+/// design rationale.
 /// </summary>
 public class QueryDocumentUseCase
 {
     private readonly IQueryRewriter _queryRewriter;
-    private readonly IDenseRetriever _denseRetriever;
-    private readonly ISparseRetriever _sparseRetriever;
-    private readonly IGraphRetriever? _graphRetriever;
-    private readonly IFusionStrategy _fusionStrategy;
-    private readonly IReranker? _reranker;
+    private readonly IRetrievalPipeline _retrievalPipeline;
     private readonly IAnswerSynthesizer _answerSynthesizer;
     private readonly IEnumerable<IInputGuardrail> _inputGuardrails;
     private readonly IEnumerable<IOutputGuardrail> _outputGuardrails;
@@ -40,23 +48,15 @@ public class QueryDocumentUseCase
 
     public QueryDocumentUseCase(
         IQueryRewriter queryRewriter,
-        IDenseRetriever denseRetriever,
-        ISparseRetriever sparseRetriever,
-        IFusionStrategy fusionStrategy,
+        IRetrievalPipeline retrievalPipeline,
         IAnswerSynthesizer answerSynthesizer,
         IEnumerable<IInputGuardrail> inputGuardrails,
         IEnumerable<IOutputGuardrail> outputGuardrails,
         IOptions<RagOptions> ragOptions,
-        ILogger<QueryDocumentUseCase> logger,
-        IGraphRetriever? graphRetriever = null,
-        IReranker? reranker = null)
+        ILogger<QueryDocumentUseCase> logger)
     {
         _queryRewriter = queryRewriter;
-        _denseRetriever = denseRetriever;
-        _sparseRetriever = sparseRetriever;
-        _graphRetriever = graphRetriever;
-        _fusionStrategy = fusionStrategy;
-        _reranker = reranker;
+        _retrievalPipeline = retrievalPipeline;
         _answerSynthesizer = answerSynthesizer;
         _inputGuardrails = inputGuardrails;
         _outputGuardrails = outputGuardrails;
@@ -109,71 +109,32 @@ public class QueryDocumentUseCase
 
         _logger.LogDebug("Rewritten query: '{Rewritten}'", rewrittenQuery);
 
-        // ── Step 2: Parallel retrieval from all sources ───────────────────────
-        var denseTask = _denseRetriever.RetrieveAsync(
-            rewrittenQuery, _ragOptions.TopKDense, query.DocumentIdFilter, ct);
+        // ── Step 2: Retrieve + fuse + rerank via the shared pipeline ───────────
+        // This single call replaces what used to be four separate inline
+        // steps (parallel retrieve, RRF fuse, rerank, mode determination).
+        // See IRetrievalPipeline / HybridRetrievalPipeline for exactly what
+        // happens inside this call -- the behavior is unchanged from
+        // before this refactor, only its location moved.
+        var retrievalRequest = new RetrievalRequest(
+            Query: rewrittenQuery,
+            DocumentIdFilter: query.DocumentIdFilter,
+            UseGraph: query.UseGraph,
+            UseReranking: query.UseReranking);
 
-        var sparseTask = _sparseRetriever.RetrieveAsync(
-            rewrittenQuery, _ragOptions.TopKSparse, query.DocumentIdFilter, ct);
-
-        Task<List<RetrievedChunk>>? graphTask = null;
-        if (query.UseGraph && _ragOptions.UseGraphRetrieval && _graphRetriever is not null)
-            graphTask = _graphRetriever.RetrieveAsync(rewrittenQuery, _ragOptions.TopKDense, ct);
-
-        await Task.WhenAll(
-            denseTask,
-            sparseTask,
-            graphTask ?? Task.FromResult(new List<RetrievedChunk>()));
-
-        var denseResults = await denseTask;
-        var sparseResults = await sparseTask;
-        var graphResults = graphTask is not null ? await graphTask : null;
-
-        _logger.LogDebug(
-            "Retrieved: Dense={D} Sparse={S} Graph={G}",
-            denseResults.Count, sparseResults.Count, graphResults?.Count ?? 0);
-
-        // ── Step 3: Fuse with RRF ─────────────────────────────────────────────
-        var fused = _fusionStrategy.Fuse(
-            denseResults, sparseResults, graphResults, _ragOptions.TopKAfterFusion);
-
-        _logger.LogDebug("After RRF fusion: {Count} chunks", fused.Count);
-
-        // ── Step 4: Rerank (optional, config-driven) ──────────────────────────
-        List<RankedChunk> ranked;
-
-        if (query.UseReranking && _ragOptions.UseReranking && _reranker is not null)
-        {
-            ranked = await _reranker.RerankAsync(
-                rewrittenQuery, fused, _ragOptions.TopKAfterRerank, ct);
-            _logger.LogDebug("After reranking: {Count} chunks", ranked.Count);
-        }
-        else
-        {
-            // No reranker — convert fused results directly
-            ranked = fused
-                .Take(_ragOptions.TopKAfterRerank)
-                .Select(f => new RankedChunk(f.Chunk, f.FusedScore, "fusion-only"))
-                .ToList();
-        }
-
-        // ── Step 5: Determine retrieval mode for result metadata ──────────────
-        var mode = (query.UseGraph && graphResults?.Count > 0)
-            ? RetrievalMode.HybridWithGraph
-            : RetrievalMode.Hybrid;
+        var retrievalResult = await _retrievalPipeline.RetrieveAndRankAsync(retrievalRequest, ct);
 
         _logger.LogDebug(
             "Retrieval mode: {Mode} | Ranked chunks: {Count} | FallbackToLLM: {Fallback}",
-            mode, ranked.Count, query.FallbackToLLM);
+            retrievalResult.Mode, retrievalResult.RankedChunks.Count, query.FallbackToLLM);
 
-        // ── Step 6: Synthesize answer ─────────────────────────────────────────
+        // ── Step 3: Synthesize answer ─────────────────────────────────────────
         // query.FallbackToLLM flows into the synthesizer automatically.
-        // If ranked.Count == 0 and FallbackToLLM == true  → Claude answers from knowledge.
-        // If ranked.Count == 0 and FallbackToLLM == false → "not found" response.
-        // If ranked.Count  > 0                            → answer from document chunks.
-        var result = await _answerSynthesizer.SynthesizeAsync(query, ranked, ct);
+        // If RankedChunks.Count == 0 and FallbackToLLM == true  → Claude answers from knowledge.
+        // If RankedChunks.Count == 0 and FallbackToLLM == false → "not found" response.
+        // If RankedChunks.Count  > 0                            → answer from document chunks.
+        var result = await _answerSynthesizer.SynthesizeAsync(query, retrievalResult.RankedChunks, ct);
 
-        // ── Step 7: Output guardrails (Phase 6.5) ─────────────────────────────
+        // ── Step 4: Output guardrails (Phase 6.5) ─────────────────────────────
         // Last line of defense before the answer reaches the caller. If ANY
         // registered output guardrail fails, we override the result with a
         // safe fallback rather than returning a potentially-unsafe answer --
@@ -204,7 +165,7 @@ public class QueryDocumentUseCase
 
         _logger.LogInformation(
             "Query complete | Mode={Mode} | Chunks={C} | Source={Source} | Time={T}ms",
-            mode, ranked.Count, result.AnswerSource, sw.ElapsedMilliseconds);
+            retrievalResult.Mode, retrievalResult.RankedChunks.Count, result.AnswerSource, sw.ElapsedMilliseconds);
 
         return result with { ProcessingTime = sw.Elapsed };
     }

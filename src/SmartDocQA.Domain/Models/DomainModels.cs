@@ -148,3 +148,75 @@ public record GraphRelationship(
 /// full rationale once documented.
 /// </summary>
 public record ConversationTurn(string Question, string Answer);
+
+/// <summary>
+/// One sub-question's full lifecycle through the agent pipeline: the
+/// question text itself, its retrieved evidence, whether the verifier
+/// accepted it, and how many attempts it took.
+/// </summary>
+public record SubQuestionResult(
+    string Question,
+    List<RetrievedChunk> RetrievedChunks,
+    bool Verified,
+    string? VerificationReason,
+    int AttemptsUsed);
+
+/// <summary>
+/// The full response from /api/agent/query -- the final synthesized
+/// answer plus the per-sub-question breakdown, so callers (and you,
+/// debugging) can see exactly how the agent arrived at the answer.
+/// </summary>
+public record AgentQueryResponse(
+    string Answer,
+    List<SubQuestionResult> SubQuestions,
+    List<Citation> Citations,
+    TimeSpan ProcessingTime);
+
+// ─── Parsing / extraction records (moved from IAll.cs during the
+// Phase 7.5 interface-file split — these are plain data returned by
+// IDocumentParser / ITableExtractor / IChartExtractor respectively) ───
+
+public record ParsedPage(int PageNumber, string RawText, bool IsScanned);
+public record ParsedDocument(string FileName, List<ParsedPage> Pages, int TotalPages);
+public record ExtractedTable(int PageNumber, string MarkdownContent, string Caption);
+public record ExtractedChart(int PageNumber, string Description, byte[] ImageBytes);
+
+/// <summary>
+/// Result of a single guardrail check. Passed=false means the question (for
+/// input guardrails) or answer (for output guardrails) failed this specific
+/// check, with Reason explaining why in human-readable form.
+/// </summary>
+public record GuardrailResult(bool Passed, string? Reason = null)
+{
+    /// <summary>Convenience factory — most checks either pass cleanly or fail with a reason.</summary>
+    public static GuardrailResult Pass() => new(true, null);
+    public static GuardrailResult Fail(string reason) => new(false, reason);
+}
+
+/// <summary>
+/// Input to IRetrievalPipeline.RetrieveAndRankAsync — the query plus the
+/// per-call options that control which retrieval sources and reranking
+/// step run for this specific request. Mirrors the flags QAQuery already
+/// exposes (DocumentIdFilter, UseGraph, UseReranking) so both
+/// QueryDocumentUseCase and AgentQueryUseCase can build one of these
+/// directly from their own query objects.
+/// </summary>
+public record RetrievalRequest(
+    string Query,
+    string? DocumentIdFilter,
+    bool UseGraph,
+    bool UseReranking);
+
+/// <summary>
+/// Output of IRetrievalPipeline.RetrieveAndRankAsync — the final ranked
+/// chunks ready for answer synthesis, plus the metadata
+/// (RetrievalMode, chunk counts) that QueryDocumentUseCase's response
+/// already reports today. Keeping these together in one result means the
+/// pipeline is the single source of truth for both the chunks AND the
+/// metadata describing how they were retrieved.
+/// </summary>
+public record RetrievalPipelineResult(
+    List<RankedChunk> RankedChunks,
+    RetrievalMode Mode,
+    int ChunksRetrieved,
+    int ChunksAfterRerank);

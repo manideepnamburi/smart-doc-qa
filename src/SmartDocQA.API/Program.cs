@@ -1,7 +1,9 @@
-using SmartDocQA.Application.UseCases;
-using SmartDocQA.Infrastructure.DependencyInjection;
-using SmartDocQA.Domain.Interfaces;
 using SmartDocQA.Application.Configuration;
+using SmartDocQA.Application.UseCases;
+using SmartDocQA.Domain.Interfaces;
+using SmartDocQA.Infrastructure;
+using SmartDocQA.Infrastructure.DependencyInjection;
+using SmartDocQA.Application.Pipelines;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +38,13 @@ builder.Services.AddScoped<IIngestDocumentUseCase>(sp => sp.GetRequiredService<I
 builder.Services.AddScoped<IngestFolderUseCase>();
 builder.Services.AddScoped<QueryDocumentUseCase>();
 builder.Services.AddScoped<DeleteDocumentsUseCase>();
+
+// Phase 7.5: IRetrievalPipeline is the extracted retrieve+fuse+rerank
+// strategy, now shared between QueryDocumentUseCase and the upcoming
+// AgentQueryUseCase. HybridRetrievalPipeline is today's implementation
+// (dense+sparse+graph -> RRF fuse -> rerank) -- swap this one line to
+// change the retrieval STRATEGY for every caller at once.
+builder.Services.AddScoped<IRetrievalPipeline, HybridRetrievalPipeline>();
 
 // ── Logging ───────────────────────────────────────────────────────────────────
 // NOTE: Deliberately NOT calling SetMinimumLevel() here. Doing so sets a hard
@@ -74,6 +83,10 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod();
     });
 });
+
+builder.Services.Configure<AgentModeOptions>(
+    builder.Configuration.GetSection(AgentModeOptions.SectionName));
+builder.Services.AddScoped<IQueryDecomposer, ClaudeQueryDecomposer>();
 
 
 var app = builder.Build();

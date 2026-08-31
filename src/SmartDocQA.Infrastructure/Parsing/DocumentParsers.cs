@@ -2,6 +2,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.Extensions.Logging;
 using SmartDocQA.Domain.Interfaces;
+using SmartDocQA.Domain.Models;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 

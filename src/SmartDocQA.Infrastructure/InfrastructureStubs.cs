@@ -952,6 +952,79 @@ public class ClaudeQueryRewriter : IQueryRewriter
     }
 }
 
+public class ClaudeQueryDecomposer : IQueryDecomposer
+{
+    private readonly ILlmClient _llmClient;
+    private readonly IPromptLoader _promptLoader;
+    private readonly PromptsOptions _prompts;
+    private readonly ILogger<ClaudeQueryDecomposer> _logger;
+
+    public ClaudeQueryDecomposer(
+        ILlmClient llmClient,
+        IPromptLoader promptLoader,
+        IOptions<PromptsOptions> prompts,
+        ILogger<ClaudeQueryDecomposer> logger)
+    {
+        _llmClient = llmClient;
+        _promptLoader = promptLoader;
+        _prompts = prompts.Value;
+        _logger = logger;
+    }
+
+    public async Task<List<string>> DecomposeAsync(
+    string question,
+    int maxSubQuestions,
+    CancellationToken ct = default)
+    {
+        var template = _promptLoader.Load(_prompts.DecomposeQuery);
+        var userPrompt = template
+            .Replace("{{question}}", question)
+            .Replace("{{maxSubQuestions}}", maxSubQuestions.ToString());
+
+        var rawResponse = await _llmClient.CompleteAsync(
+            systemPrompt: "You are a precise query decomposition assistant. Return ONLY a JSON array of strings.",
+            userPrompt: userPrompt,
+            ct: ct);
+
+        var subQuestions = TryParseSubQuestions(rawResponse, question, maxSubQuestions);
+
+        _logger.LogInformation(
+            "Query decomposition: '{Original}' → {Count} sub-question(s)",
+            question, subQuestions.Count);
+
+        return subQuestions;
+    }
+
+    private List<string> TryParseSubQuestions(string rawResponse, string originalQuestion, int maxSubQuestions)
+    {
+        var cleaned = rawResponse.Trim();
+
+        if (cleaned.StartsWith("```"))
+        {
+            var firstNewline = cleaned.IndexOf('\n');
+            var lastFence = cleaned.LastIndexOf("```");
+            if (firstNewline > 0 && lastFence > firstNewline)
+                cleaned = cleaned[(firstNewline + 1)..lastFence].Trim();
+        }
+
+        try
+        {
+            var parsed = System.Text.Json.JsonSerializer.Deserialize<List<string>>(cleaned);
+            if (parsed is { Count: > 0 })
+                return parsed.Take(maxSubQuestions).ToList();
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            _logger.LogWarning(ex,
+                "Query decomposition returned unparseable response, falling back to " +
+                "single-question passthrough. Raw response: {Raw}", rawResponse);
+        }
+
+        return new List<string> { originalQuestion };
+    }
+
+}
+
 // ─── Claude Entity Extractor (Phase 5) ───────────────────────────────────────
 //
 // Reads a chunk's text content and asks Claude to extract entities +

@@ -105,6 +105,7 @@ public class PromptsOptions
     public string Rerank { get; set; } = "rerank_system.txt";
     public string EntityExtraction { get; set; } = "entity_extraction.txt";
     public string QueryRewrite { get; set; } = "query_rewrite.txt";
+    public string DecomposeQuery { get; set; } = "decompose_query.txt";
 }
 
 public class EmbeddingOptions
@@ -223,4 +224,37 @@ public class VisionExtractionOptions
     public const string SectionName = "VisionExtraction";
 
     public int MaxConcurrency { get; set; } = 5;
+}
+
+/// <summary>
+/// Controls the agentic query pipeline (Phase 7.5): decomposing compound
+/// questions into sub-questions, retrieving/verifying/retrying per
+/// sub-question, then synthesizing a combined answer.
+/// </summary>
+public class AgentModeOptions
+{
+    public const string SectionName = "AgentMode";
+
+    /// <summary>
+    /// If true, a cheap triage check runs before deciding whether to
+    /// decompose. If false, every question always goes through full
+    /// decomposition. Both code paths exist; this flag just picks which
+    /// one runs -- lets you compare cost/latency between the two later
+    /// without changing code.
+    /// </summary>
+    public bool TriageBeforeDecomposition { get; set; } = false;
+
+    /// <summary>
+    /// Safety cap on how many sub-questions decomposition can split a
+    /// single question into, so a pathological input can't explode into
+    /// dozens of retrieval calls.
+    /// </summary>
+    public int MaxSubQuestions { get; set; } = 5;
+
+    /// <summary>
+    /// How many times a single sub-question can be retried (with a
+    /// reformulated query) if the verifier fails it, before giving up
+    /// on that sub-question.
+    /// </summary>
+    public int MaxRetriesPerSubQuestion { get; set; } = 2;
 }
