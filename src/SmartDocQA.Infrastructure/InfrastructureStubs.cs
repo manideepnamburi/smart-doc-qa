@@ -1423,4 +1423,376 @@ public class CompositeDocumentRepository : IDocumentRepository
         => Task.FromResult(new List<DocumentMetadata>());
 }
 
+// ─── Claude Answer Verifier (Phase 7.5) ──────────────────────────────────────
+//
+// Checks whether retrieved chunks for a single sub-question actually
+// answer it, as part of the agentic query pipeline's retrieve -> verify
+// -> retry loop. Deliberately built as its own LLM call rather than
+// reusing the output grounding guardrail -- this runs PER sub-question,
+// BEFORE synthesis, and its failure triggers a retry rather than
+// blocking the whole response. See IAnswerVerifier's XML doc comment for
+// the full design rationale.
+
+public class ClaudeAnswerVerifier : IAnswerVerifier
+{
+    private readonly ILlmClient _llmClient;
+    private readonly IPromptLoader _promptLoader;
+    private readonly PromptsOptions _prompts;
+    private readonly ILogger<ClaudeAnswerVerifier> _logger;
+
+    public ClaudeAnswerVerifier(
+        ILlmClient llmClient,
+        IPromptLoader promptLoader,
+        IOptions<PromptsOptions> prompts,
+        ILogger<ClaudeAnswerVerifier> logger)
+    {
+        _llmClient = llmClient;
+        _promptLoader = promptLoader;
+        _prompts = prompts.Value;
+        _logger = logger;
+    }
+
+    public async Task<VerificationResult> VerifyAsync(
+        string subQuestion,
+        List<RankedChunk> rankedChunks,
+        CancellationToken ct = default)
+    {
+        // No evidence at all is an immediate, cheap fail -- no need to
+        // spend an LLM call asking "does nothing answer this question."
+        if (rankedChunks.Count == 0)
+        {
+            _logger.LogDebug(
+                "Verification skipped (no evidence) for sub-question: '{Question}'",
+                subQuestion);
+            return new VerificationResult(
+                Verified: false,
+                Reason: "No evidence was retrieved for this sub-question.");
+        }
+
+        var evidenceText = BuildEvidenceText(rankedChunks);
+
+        var template = _promptLoader.Load(_prompts.VerifyAnswer);
+        var userPrompt = template
+            .Replace("{{subQuestion}}", subQuestion)
+            .Replace("{{evidence}}", evidenceText);
+
+        var rawResponse = await _llmClient.CompleteAsync(
+            systemPrompt: "You are a strict, precise evidence-verification assistant. Return ONLY valid JSON.",
+            userPrompt: userPrompt,
+            ct: ct);
+
+        var result = ParseVerificationResponse(rawResponse, subQuestion);
+
+        _logger.LogInformation(
+            "Verification for '{Question}': Verified={Verified} | Reason={Reason}",
+            subQuestion, result.Verified, result.Reason);
+
+        return result;
+    }
+
+    // Builds a readable, bounded-length evidence block from the ranked
+    // chunks. Truncates each chunk's content to keep the verification
+    // prompt small -- the verifier only needs enough text to judge
+    // relevance, not the full chunk.
+    private static string BuildEvidenceText(List<RankedChunk> rankedChunks)
+    {
+        var sb = new System.Text.StringBuilder();
+        for (int i = 0; i < rankedChunks.Count; i++)
+        {
+            var content = rankedChunks[i].Chunk.Content;
+            var truncated = content.Length > 400 ? content[..400] + "..." : content;
+            sb.AppendLine($"EVIDENCE_{i + 1}: {truncated}");
+        }
+        return sb.ToString();
+    }
+
+    // Defensive parsing, same fail-soft philosophy as ClaudeQueryDecomposer
+    // and ClaudeReranker elsewhere in this file: if Claude's response
+    // can't be parsed, we don't crash the pipeline -- we fail the
+    // verification conservatively (Verified=false), which simply causes
+    // this sub-question to be retried rather than silently treated as
+    // successful on bad data.
+    private VerificationResult ParseVerificationResponse(string rawResponse, string subQuestion)
+    {
+        var cleaned = rawResponse.Trim();
+        if (cleaned.StartsWith("```"))
+        {
+            cleaned = cleaned
+                .Replace("```json", "", StringComparison.OrdinalIgnoreCase)
+                .Replace("```", "")
+                .Trim();
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(cleaned);
+            var verified = doc.RootElement.GetProperty("verified").GetBoolean();
+            var reason = doc.RootElement.GetProperty("reason").GetString()
+                ?? "(no reason provided)";
+            return new VerificationResult(verified, reason);
+        }
+        catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException)
+        {
+            _logger.LogWarning(ex,
+                "Failed to parse verification response for sub-question '{Question}' — " +
+                "conservatively treating as unverified. Raw response: {Raw}",
+                subQuestion, rawResponse);
+
+            return new VerificationResult(
+                Verified: false,
+                Reason: "Verification response could not be parsed; treated as unverified to be safe.");
+        }
+    }
+}
+
+// ─── Claude Query Reformulator (Phase 7.5) ───────────────────────────────────
+//
+// Rewrites a sub-question that failed IAnswerVerifier's check, using the
+// verifier's specific failure reason to target the gap on retry, rather
+// than blindly re-running the exact same query and failing identically.
+
+public class ClaudeQueryReformulator : IQueryReformulator
+{
+    private readonly ILlmClient _llmClient;
+    private readonly IPromptLoader _promptLoader;
+    private readonly PromptsOptions _prompts;
+    private readonly ILogger<ClaudeQueryReformulator> _logger;
+
+    public ClaudeQueryReformulator(
+        ILlmClient llmClient,
+        IPromptLoader promptLoader,
+        IOptions<PromptsOptions> prompts,
+        ILogger<ClaudeQueryReformulator> logger)
+    {
+        _llmClient = llmClient;
+        _promptLoader = promptLoader;
+        _prompts = prompts.Value;
+        _logger = logger;
+    }
+
+    public async Task<string> ReformulateAsync(
+        string originalSubQuestion,
+        string failureReason,
+        CancellationToken ct = default)
+    {
+        var template = _promptLoader.Load(_prompts.ReformulateQuery);
+        var userPrompt = template
+            .Replace("{{originalSubQuestion}}", originalSubQuestion)
+            .Replace("{{failureReason}}", failureReason);
+
+        var reformulated = await _llmClient.CompleteAsync(
+            systemPrompt: "You are a precise search query reformulation assistant. Return ONLY the reformulated question, no explanation.",
+            userPrompt: userPrompt,
+            ct: ct);
+
+        var trimmed = reformulated.Trim();
+
+        // Defensive fallback: if Claude returns an empty string for any
+        // reason, fall back to the original sub-question unchanged rather
+        // than sending an empty query into the retrieval pipeline -- same
+        // fail-soft philosophy as every other LLM-call wrapper in this
+        // file (ClaudeQueryDecomposer, ClaudeAnswerVerifier).
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            _logger.LogWarning(
+                "Reformulation returned empty response for '{Original}' — keeping original sub-question",
+                originalSubQuestion);
+            return originalSubQuestion;
+        }
+
+        _logger.LogInformation(
+            "Reformulated sub-question: '{Original}' → '{Reformulated}' (reason: {Reason})",
+            originalSubQuestion, trimmed, failureReason);
+
+        return trimmed;
+    }
+}
+
+// ─── Claude Agent Answer Synthesizer (Phase 7.5) ─────────────────────────────
+//
+// Combines every sub-question's verified (or best-effort) evidence into
+// one final answer, with citations traceable back to which sub-question
+// each fact came from. This is the Option B design deliberately chosen
+// over pooling all chunks and reusing IAnswerSynthesizer: each fact in
+// the final answer carries a real link back to its specific source
+// evidence, not just a flat, unattributed citation list.
+//
+// HOW ATTRIBUTION WORKS:
+// Every ranked chunk across every sub-question gets a unique evidence ID
+// in the form "{subQuestionIndex}.{chunkIndex}" (e.g. "1.2" = sub-question
+// 1's second chunk). The synthesis prompt instructs Claude to tag each
+// fact it states with [evidenceId] inline. After the response comes
+// back, this class extracts those markers via regex, looks up which
+// RankedChunk each one refers to, and builds real Citation objects from
+// them -- then strips the markers from the final prose so the user sees
+// clean text, with citations surfaced separately (matching how the
+// existing QAResult.Citations list already works).
+
+public class ClaudeAgentAnswerSynthesizer : IAgentAnswerSynthesizer
+{
+    private readonly ILlmClient _llmClient;
+    private readonly IPromptLoader _promptLoader;
+    private readonly PromptsOptions _prompts;
+    private readonly ILogger<ClaudeAgentAnswerSynthesizer> _logger;
+
+    // Matches evidence markers like "[1.2]" -- group 1 is the sub-question
+    // index, group 2 is the chunk index within that sub-question.
+   private static readonly System.Text.RegularExpressions.Regex EvidenceMarkerPattern =
+    new(@"\[EVIDENCE_(\d+)\.(\d+)\]", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    public ClaudeAgentAnswerSynthesizer(
+        ILlmClient llmClient,
+        IPromptLoader promptLoader,
+        IOptions<PromptsOptions> prompts,
+        ILogger<ClaudeAgentAnswerSynthesizer> logger)
+    {
+        _llmClient = llmClient;
+        _promptLoader = promptLoader;
+        _prompts = prompts.Value;
+        _logger = logger;
+    }
+
+    public async Task<AgentQueryResponse> SynthesizeAsync(
+        string originalQuestion,
+        List<SubQuestionResult> subQuestionResults,
+        CancellationToken ct = default)
+    {
+        // Build the evidence blocks AND a lookup dictionary in the same
+        // pass -- the dictionary lets us resolve each [evidenceId] marker
+        // back to its real RankedChunk once Claude's response comes back.
+        var (evidenceBlocks, evidenceLookup) = BuildEvidenceBlocksAndLookup(subQuestionResults);
+
+        var template = _promptLoader.Load(_prompts.AgentSynthesize);
+        var userPrompt = template
+            .Replace("{{originalQuestion}}", originalQuestion)
+            .Replace("{{subQuestionBlocks}}", evidenceBlocks);
+
+        var rawAnswer = await _llmClient.CompleteAsync(
+            systemPrompt: "You are a precise answer synthesis assistant. Follow the citation format exactly as instructed.",
+            userPrompt: userPrompt,
+            ct: ct);
+
+        var (cleanedAnswer, citations) = ExtractCitationsAndCleanAnswer(rawAnswer, evidenceLookup);
+
+        _logger.LogInformation(
+            "Agent synthesis complete: {SubQuestionCount} sub-questions → {CitationCount} citations",
+            subQuestionResults.Count, citations.Count);
+
+        return new AgentQueryResponse(
+            Answer: cleanedAnswer,
+            SubQuestions: subQuestionResults,
+            Citations: citations,
+            ProcessingTime: TimeSpan.Zero); // caller (AgentQueryUseCase) overrides this with the real elapsed time
+    }
+
+    // Builds the prompt's evidence section AND a dictionary mapping each
+    // evidence ID (e.g. "1.2") to the RankedChunk it refers to, so
+    // citations can be resolved after the LLM call without a second pass
+    // over the sub-question results.
+    private static (string Blocks, Dictionary<string, RankedChunk> Lookup) BuildEvidenceBlocksAndLookup(
+        List<SubQuestionResult> subQuestionResults)
+    {
+        var sb = new System.Text.StringBuilder();
+        var lookup = new Dictionary<string, RankedChunk>();
+
+        for (int q = 0; q < subQuestionResults.Count; q++)
+        {
+            var subQuestion = subQuestionResults[q];
+            var qIndex = q + 1;
+
+            var statusLabel = subQuestion.Verified
+                ? "VERIFIED"
+                : $"UNVERIFIED — reason: {subQuestion.VerificationReason ?? "no evidence found after retries"}";
+
+            sb.AppendLine($"Sub-question {qIndex}: {subQuestion.Question} [{statusLabel}]");
+
+            if (subQuestion.RankedChunks.Count == 0)
+            {
+                sb.AppendLine("  (no evidence retrieved for this sub-question)");
+            }
+            else
+            {
+                for (int c = 0; c < subQuestion.RankedChunks.Count; c++)
+                {
+                    var chunk = subQuestion.RankedChunks[c];
+                    var chunkIndex = c + 1;
+                    var evidenceId = $"{qIndex}.{chunkIndex}";
+
+                    lookup[evidenceId] = chunk;
+
+                    var content = chunk.Chunk.Content;
+                    var truncated = content.Length > 300 ? content[..300] + "..." : content;
+
+                    sb.AppendLine($"  EVIDENCE_{evidenceId}: {truncated}");
+                }
+            }
+
+            sb.AppendLine();
+        }
+
+        return (sb.ToString(), lookup);
+    }
+
+    // Finds every [evidenceId] marker in the raw answer, resolves each to
+    // a real Citation via the lookup dictionary, deduplicates (the same
+    // evidence might support multiple sentences), and returns the answer
+    // text with markers stripped so the user sees clean prose.
+    private (string CleanedAnswer, List<Citation> Citations) ExtractCitationsAndCleanAnswer(
+        string rawAnswer,
+        Dictionary<string, RankedChunk> evidenceLookup)
+    {
+        var citations = new List<Citation>();
+        var seenChunkIds = new HashSet<string>();
+
+        var matches = EvidenceMarkerPattern.Matches(rawAnswer);
+        foreach (System.Text.RegularExpressions.Match match in matches)
+        {
+            var evidenceId = $"{match.Groups[1].Value}.{match.Groups[2].Value}";
+
+            if (!evidenceLookup.TryGetValue(evidenceId, out var rankedChunk))
+            {
+                // Claude referenced an evidence ID that doesn't exist in
+                // our lookup (e.g. a typo or hallucinated marker) -- log
+                // and skip it rather than crashing synthesis over a
+                // citation-formatting slip.
+                _logger.LogWarning(
+                    "Agent synthesis referenced unknown evidence ID '{Id}' — skipping citation",
+                    evidenceId);
+                continue;
+            }
+
+            var chunk = rankedChunk.Chunk;
+
+            // Skip duplicates -- the same chunk may be cited multiple
+            // times across the answer, but should only appear once in
+            // the final citation list.
+            if (!seenChunkIds.Add(chunk.ChunkId))
+                continue;
+
+            var excerpt = chunk.Content.Length > 200
+                ? chunk.Content[..200] + "..."
+                : chunk.Content;
+
+            citations.Add(new Citation(
+                ChunkId: chunk.ChunkId,
+                FileName: chunk.FileName,
+                PageNumber: chunk.PageNumber,
+                ChunkType: chunk.ChunkType,
+                RelevantExcerpt: excerpt));
+        }
+
+        // Strip all [n.n] markers from the visible answer text -- citations
+        // are surfaced separately via the Citations list, matching how
+        // QAResult already presents citations apart from the answer prose.
+        var cleanedAnswer = EvidenceMarkerPattern.Replace(rawAnswer, "").Trim();
+
+        // Collapse any double-spaces left behind where a marker used to
+        // sit mid-sentence (e.g. "the rate was 12% [1.2] among adults"
+        // becomes "the rate was 12%  among adults" after stripping --
+        // this tidies that to a single space).
+        cleanedAnswer = System.Text.RegularExpressions.Regex.Replace(cleanedAnswer, @" {2,}", " ");
+
+        return (cleanedAnswer, citations);
+    }
+}
 

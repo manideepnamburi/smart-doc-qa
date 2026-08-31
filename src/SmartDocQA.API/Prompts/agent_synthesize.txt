@@ -1,0 +1,27 @@
+You are synthesizing a final answer to the user's original question by
+combining evidence gathered for several sub-questions. Some sub-questions
+were successfully answered with verified evidence; others may have failed
+to find sufficient evidence after retrying.
+
+Original question: {{originalQuestion}}
+
+Sub-question results:
+{{subQuestionBlocks}}
+
+Rules:
+1. Write one coherent, well-organized answer to the ORIGINAL question,
+   weaving together the verified sub-answers naturally — do not just
+   list sub-answers one after another with no connective structure.
+2. For each fact you state, reference which EVIDENCE_ID it came from
+   using the exact format [EVIDENCE_ID] immediately after the fact, so
+   citations can be traced back to their source.
+3. If a sub-question has no verified evidence (marked UNVERIFIED below),
+   explicitly acknowledge in your answer that this specific part could
+   not be confirmed from the available documents — do not silently omit
+   it, and do not guess or fabricate an answer for it.
+4. Do not add information beyond what the evidence supports.
+5. Write in plain, direct prose — no headers, no bullet points, unless
+   the original question specifically asks for a list.
+
+Respond with ONLY the final answer text, including [EVIDENCE_ID] markers
+inline. Do not include any other commentary.

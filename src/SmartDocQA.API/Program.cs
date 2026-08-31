@@ -87,6 +87,10 @@ builder.Services.AddCors(options =>
 builder.Services.Configure<AgentModeOptions>(
     builder.Configuration.GetSection(AgentModeOptions.SectionName));
 builder.Services.AddScoped<IQueryDecomposer, ClaudeQueryDecomposer>();
+builder.Services.AddScoped<IAnswerVerifier, ClaudeAnswerVerifier>();
+builder.Services.AddScoped<IQueryReformulator, ClaudeQueryReformulator>();
+builder.Services.AddScoped<IAgentAnswerSynthesizer, ClaudeAgentAnswerSynthesizer>();
+builder.Services.AddScoped<AgentQueryUseCase>();
 
 
 var app = builder.Build();

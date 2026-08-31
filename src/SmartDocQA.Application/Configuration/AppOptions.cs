@@ -106,6 +106,9 @@ public class PromptsOptions
     public string EntityExtraction { get; set; } = "entity_extraction.txt";
     public string QueryRewrite { get; set; } = "query_rewrite.txt";
     public string DecomposeQuery { get; set; } = "decompose_query.txt";
+    public string VerifyAnswer { get; set; } = "verify_answer.txt";
+    public string ReformulateQuery { get; set; } = "reformulate_query.txt";
+    public string AgentSynthesize { get; set; } = "agent_synthesize.txt";
 }
 
 public class EmbeddingOptions
@@ -257,4 +260,16 @@ public class AgentModeOptions
     /// on that sub-question.
     /// </summary>
     public int MaxRetriesPerSubQuestion { get; set; } = 2;
+
+       /// <summary>
+    /// How many sub-questions can be processed concurrently (each running
+    /// its own retrieve -> verify -> reformulate+retry loop). Each
+    /// sub-question is fully independent of the others, so this is safe
+    /// to parallelize -- same bounded-concurrency reasoning as
+    /// VisionExtractionOptions.MaxConcurrency. Tune against your
+    /// Anthropic account's actual RPM (Console > Settings > Limits);
+    /// too high trades per-sub-question timeouts for 429 rate-limit
+    /// errors instead.
+    /// </summary>
+    public int MaxConcurrentSubQuestions { get; set; } = 3;
 }

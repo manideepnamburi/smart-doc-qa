@@ -151,15 +151,30 @@ public record ConversationTurn(string Question, string Answer);
 
 /// <summary>
 /// One sub-question's full lifecycle through the agent pipeline: the
-/// question text itself, its retrieved evidence, whether the verifier
-/// accepted it, and how many attempts it took.
+/// question text itself, its retrieved+ranked evidence, whether the
+/// verifier accepted it, and how many attempts it took.
+///
+/// CORRECTED (during AgentQueryUseCase build-out): originally typed as
+/// List&lt;RetrievedChunk&gt;, but IRetrievalPipeline.RetrieveAndRankAsync
+/// returns List&lt;RankedChunk&gt; -- the reranked, scored result ready for
+/// synthesis. RankedChunk carries the reranker score needed to judge
+/// evidence quality per sub-question; RetrievedChunk is the earlier,
+/// pre-fusion/pre-rerank shape and isn't what synthesis should consume.
 /// </summary>
 public record SubQuestionResult(
     string Question,
-    List<RetrievedChunk> RetrievedChunks,
+    List<RankedChunk> RankedChunks,
     bool Verified,
     string? VerificationReason,
     int AttemptsUsed);
+
+/// <summary>
+/// Output of IAnswerVerifier.VerifyAsync — whether the retrieved evidence
+/// for a sub-question actually answers it, plus a human-readable reason
+/// either way (used both for logging and, on failure, to inform the
+/// query reformulation step about what specifically was missing).
+/// </summary>
+public record VerificationResult(bool Verified, string Reason);
 
 /// <summary>
 /// The full response from /api/agent/query -- the final synthesized
