@@ -33,8 +33,8 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new()
     {
-        Title       = "SmartDocQA API",
-        Version     = "v1",
+        Title = "SmartDocQA API",
+        Version = "v1",
         Description = "Advanced RAG Document Q&A — C# .NET 8 + Semantic Kernel + Claude"
     });
 });

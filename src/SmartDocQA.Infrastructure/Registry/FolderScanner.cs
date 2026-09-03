@@ -19,7 +19,7 @@ public class FolderScanner : IFolderScanner
         ILogger<FolderScanner> logger)
     {
         _options = options.Value;
-        _logger  = logger;
+        _logger = logger;
     }
 
     public List<string> Scan(string folderPath)

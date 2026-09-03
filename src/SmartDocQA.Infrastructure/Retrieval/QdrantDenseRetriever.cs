@@ -18,7 +18,7 @@ public class QdrantDenseRetriever : IDenseRetriever
 
     public QdrantDenseRetriever(IVectorStore vectorStore, IEmbeddingService embeddingService)
     {
-        _vectorStore      = vectorStore;
+        _vectorStore = vectorStore;
         _embeddingService = embeddingService;
     }
 

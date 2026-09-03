@@ -37,10 +37,10 @@ public class IngestFolderUseCase
         IIngestDocumentUseCase ingestDocumentUseCase,
         ILogger<IngestFolderUseCase> logger)
     {
-        _folderScanner         = folderScanner;
-        _registry              = registry;
+        _folderScanner = folderScanner;
+        _registry = registry;
         _ingestDocumentUseCase = ingestDocumentUseCase;
-        _logger                = logger;
+        _logger = logger;
     }
 
     public async Task<FolderIngestResult> ExecuteAsync(
@@ -49,20 +49,20 @@ public class IngestFolderUseCase
         var sw = System.Diagnostics.Stopwatch.StartNew();
 
         // ── Validate ──────────────────────────────────────────────────────────
-        bool hasFileList  = request.FilesToIngest?.Count > 0;
+        bool hasFileList = request.FilesToIngest?.Count > 0;
         bool hasFileTypes = request.FileTypes?.Count > 0;
         bool hasIngestAll = request.IngestAll;
 
         if (!hasFileList && !hasFileTypes && !hasIngestAll)
         {
             return new FolderIngestResult(
-                FolderPath:     request.FolderPath,
-                Mode:           IngestMode.None,
-                TotalFound:     0,
-                Ingested:       new List<DocumentMetadata>(),
-                Skipped:        new List<string>(),
-                Failed:         new List<FailedFile>(),
-                NotFound:       new List<string>(),
+                FolderPath: request.FolderPath,
+                Mode: IngestMode.None,
+                TotalFound: 0,
+                Ingested: new List<DocumentMetadata>(),
+                Skipped: new List<string>(),
+                Failed: new List<FailedFile>(),
+                NotFound: new List<string>(),
                 ProcessingTime: sw.Elapsed,
                 Error: "No ingestion criteria provided. " +
                        "Provide filesToIngest, fileTypes, or set ingestAll=true.");
@@ -71,13 +71,13 @@ public class IngestFolderUseCase
         if (!Directory.Exists(request.FolderPath))
         {
             return new FolderIngestResult(
-                FolderPath:     request.FolderPath,
-                Mode:           IngestMode.None,
-                TotalFound:     0,
-                Ingested:       new List<DocumentMetadata>(),
-                Skipped:        new List<string>(),
-                Failed:         new List<FailedFile>(),
-                NotFound:       new List<string>(),
+                FolderPath: request.FolderPath,
+                Mode: IngestMode.None,
+                TotalFound: 0,
+                Ingested: new List<DocumentMetadata>(),
+                Skipped: new List<string>(),
+                Failed: new List<FailedFile>(),
+                NotFound: new List<string>(),
                 ProcessingTime: sw.Elapsed,
                 Error: $"Folder not found: {request.FolderPath}");
         }
@@ -127,8 +127,8 @@ public class IngestFolderUseCase
         var allFiles = _folderScanner.Scan(folderPath);
 
         var ingested = new List<DocumentMetadata>();
-        var skipped  = new List<string>();
-        var failed   = new List<FailedFile>();
+        var skipped = new List<string>();
+        var failed = new List<FailedFile>();
         var notFound = new List<string>();
 
         foreach (var fileName in fileNames)
@@ -157,15 +157,15 @@ public class IngestFolderUseCase
         LogSummary(IngestMode.SpecificFiles, ingested, skipped, failed, sw);
 
         return new FolderIngestResult(
-            FolderPath:     folderPath,
-            Mode:           IngestMode.SpecificFiles,
-            TotalFound:     fileNames.Count,
-            Ingested:       ingested,
-            Skipped:        skipped,
-            Failed:         failed,
-            NotFound:       notFound,
+            FolderPath: folderPath,
+            Mode: IngestMode.SpecificFiles,
+            TotalFound: fileNames.Count,
+            Ingested: ingested,
+            Skipped: skipped,
+            Failed: failed,
+            NotFound: notFound,
             ProcessingTime: sw.Elapsed,
-            Error:          null);
+            Error: null);
     }
 
     // ── Priority 2: Ingest by file type ──────────────────────────────────────
@@ -189,8 +189,8 @@ public class IngestFolderUseCase
             matchedFiles.Count, string.Join(", ", fileTypes), folderPath);
 
         var ingested = new List<DocumentMetadata>();
-        var skipped  = new List<string>();
-        var failed   = new List<FailedFile>();
+        var skipped = new List<string>();
+        var failed = new List<FailedFile>();
 
         foreach (var filePath in matchedFiles)
         {
@@ -202,15 +202,15 @@ public class IngestFolderUseCase
         LogSummary(IngestMode.FileTypes, ingested, skipped, failed, sw);
 
         return new FolderIngestResult(
-            FolderPath:     folderPath,
-            Mode:           IngestMode.FileTypes,
-            TotalFound:     matchedFiles.Count,
-            Ingested:       ingested,
-            Skipped:        skipped,
-            Failed:         failed,
-            NotFound:       new List<string>(),
+            FolderPath: folderPath,
+            Mode: IngestMode.FileTypes,
+            TotalFound: matchedFiles.Count,
+            Ingested: ingested,
+            Skipped: skipped,
+            Failed: failed,
+            NotFound: new List<string>(),
             ProcessingTime: sw.Elapsed,
-            Error:          null);
+            Error: null);
     }
 
     // ── Priority 3: Ingest all supported files ────────────────────────────────
@@ -227,20 +227,20 @@ public class IngestFolderUseCase
             _logger.LogWarning("No supported files found in {Folder}", folderPath);
             sw.Stop();
             return new FolderIngestResult(
-                FolderPath:     folderPath,
-                Mode:           IngestMode.IngestAll,
-                TotalFound:     0,
-                Ingested:       new List<DocumentMetadata>(),
-                Skipped:        new List<string>(),
-                Failed:         new List<FailedFile>(),
-                NotFound:       new List<string>(),
+                FolderPath: folderPath,
+                Mode: IngestMode.IngestAll,
+                TotalFound: 0,
+                Ingested: new List<DocumentMetadata>(),
+                Skipped: new List<string>(),
+                Failed: new List<FailedFile>(),
+                NotFound: new List<string>(),
                 ProcessingTime: sw.Elapsed,
-                Error:          null);
+                Error: null);
         }
 
         var ingested = new List<DocumentMetadata>();
-        var skipped  = new List<string>();
-        var failed   = new List<FailedFile>();
+        var skipped = new List<string>();
+        var failed = new List<FailedFile>();
 
         foreach (var filePath in allFiles)
         {
@@ -252,15 +252,15 @@ public class IngestFolderUseCase
         LogSummary(IngestMode.IngestAll, ingested, skipped, failed, sw);
 
         return new FolderIngestResult(
-            FolderPath:     folderPath,
-            Mode:           IngestMode.IngestAll,
-            TotalFound:     allFiles.Count,
-            Ingested:       ingested,
-            Skipped:        skipped,
-            Failed:         failed,
-            NotFound:       new List<string>(),
+            FolderPath: folderPath,
+            Mode: IngestMode.IngestAll,
+            TotalFound: allFiles.Count,
+            Ingested: ingested,
+            Skipped: skipped,
+            Failed: failed,
+            NotFound: new List<string>(),
             ProcessingTime: sw.Elapsed,
-            Error:          null);
+            Error: null);
     }
 
     // ── Shared file processor ─────────────────────────────────────────────────
@@ -290,19 +290,19 @@ public class IngestFolderUseCase
 
             var source = new DocumentSource(
                 SourceType: DocumentSourceType.LocalPath,
-                Path:       filePath,
-                FileName:   Path.GetFileName(filePath));
+                Path: filePath,
+                FileName: Path.GetFileName(filePath));
 
             var metadata = await _ingestDocumentUseCase.ExecuteAsync(source, ct);
 
             // Register in SQLite
             var fileInfo = new FileInfo(filePath);
             await _registry.RegisterAsync(
-                filePath:      filePath,
-                documentId:    metadata.DocumentId,
-                fileName:      metadata.FileName,
+                filePath: filePath,
+                documentId: metadata.DocumentId,
+                fileName: metadata.FileName,
                 fileSizeBytes: fileInfo.Length,
-                ct:            ct);
+                ct: ct);
 
             ingested.Add(metadata);
 
@@ -385,8 +385,8 @@ public record FolderIngestResult(
     string? Error)
 {
     public int IngestedCount => Ingested.Count;
-    public int SkippedCount  => Skipped.Count;
-    public int FailedCount   => Failed.Count;
+    public int SkippedCount => Skipped.Count;
+    public int FailedCount => Failed.Count;
 }
 
 public record FailedFile(string FilePath, string FileName, string Error);

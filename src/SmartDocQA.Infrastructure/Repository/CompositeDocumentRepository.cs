@@ -20,9 +20,9 @@ public class CompositeDocumentRepository : IDocumentRepository
         IVectorStore vectorStore, IKeywordIndex keywordIndex,
         ILogger<CompositeDocumentRepository> logger)
     {
-        _vectorStore  = vectorStore;
+        _vectorStore = vectorStore;
         _keywordIndex = keywordIndex;
-        _logger       = logger;
+        _logger = logger;
     }
 
     public async Task SaveAsync(

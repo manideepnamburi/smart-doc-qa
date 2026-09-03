@@ -41,7 +41,7 @@ namespace SmartDocQA.Infrastructure.Retrieval;
 public class BM25KeywordIndex : IKeywordIndex, IAsyncDisposable
 {
     private const float K1 = 1.5f;   // term frequency saturation
-    private const float B  = 0.75f;  // length normalization strength
+    private const float B = 0.75f;  // length normalization strength
 
     private readonly BM25Options _options;
     private readonly ILogger<BM25KeywordIndex> _logger;
@@ -59,7 +59,7 @@ public class BM25KeywordIndex : IKeywordIndex, IAsyncDisposable
         ILogger<BM25KeywordIndex> logger)
     {
         _options = options.Value;
-        _logger  = logger;
+        _logger = logger;
 
         var dbPath = Path.IsPathRooted(_options.DatabasePath)
             ? _options.DatabasePath
@@ -154,7 +154,7 @@ public class BM25KeywordIndex : IKeywordIndex, IAsyncDisposable
         if (await reader.ReadAsync(ct))
         {
             _totalChunkCount = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
-            _avgDocLength    = reader.IsDBNull(1) ? 0 : reader.GetDouble(1);
+            _avgDocLength = reader.IsDBNull(1) ? 0 : reader.GetDouble(1);
         }
     }
 
@@ -193,14 +193,14 @@ public class BM25KeywordIndex : IKeywordIndex, IAsyncDisposable
                         (@chunkId, @documentId, @fileName, @content, @chunkType,
                          @pageNumber, @chunkIndex, @docLength, @metadataJson)
                     """;
-                chunkCmd.Parameters.AddWithValue("@chunkId",     chunk.ChunkId);
-                chunkCmd.Parameters.AddWithValue("@documentId",  chunk.DocumentId);
-                chunkCmd.Parameters.AddWithValue("@fileName",    chunk.FileName);
-                chunkCmd.Parameters.AddWithValue("@content",     chunk.Content);
-                chunkCmd.Parameters.AddWithValue("@chunkType",   chunk.ChunkType.ToString());
-                chunkCmd.Parameters.AddWithValue("@pageNumber",  chunk.PageNumber);
-                chunkCmd.Parameters.AddWithValue("@chunkIndex",  chunk.ChunkIndex);
-                chunkCmd.Parameters.AddWithValue("@docLength",   words.Count);
+                chunkCmd.Parameters.AddWithValue("@chunkId", chunk.ChunkId);
+                chunkCmd.Parameters.AddWithValue("@documentId", chunk.DocumentId);
+                chunkCmd.Parameters.AddWithValue("@fileName", chunk.FileName);
+                chunkCmd.Parameters.AddWithValue("@content", chunk.Content);
+                chunkCmd.Parameters.AddWithValue("@chunkType", chunk.ChunkType.ToString());
+                chunkCmd.Parameters.AddWithValue("@pageNumber", chunk.PageNumber);
+                chunkCmd.Parameters.AddWithValue("@chunkIndex", chunk.ChunkIndex);
+                chunkCmd.Parameters.AddWithValue("@docLength", words.Count);
                 chunkCmd.Parameters.AddWithValue("@metadataJson",
                     JsonSerializer.Serialize(chunk.Metadata));
                 await chunkCmd.ExecuteNonQueryAsync(ct);
@@ -281,10 +281,10 @@ public class BM25KeywordIndex : IKeywordIndex, IAsyncDisposable
             while (await reader.ReadAsync(ct))
             {
                 var chunkId = reader.GetString(0);
-                var word    = reader.GetString(1);
-                var count   = reader.GetInt32(2);
-                var docId   = reader.GetString(3);
-                var docLen  = reader.GetInt32(4);
+                var word = reader.GetString(1);
+                var count = reader.GetInt32(2);
+                var docId = reader.GetString(3);
+                var docLen = reader.GetInt32(4);
 
                 if (!perChunkTerms.TryGetValue(chunkId, out var entry))
                 {
@@ -335,10 +335,10 @@ public class BM25KeywordIndex : IKeywordIndex, IAsyncDisposable
                 if (!terms.TryGetValue(term, out var tf))
                     continue;
 
-                var df  = documentFrequency.GetValueOrDefault(term, 1);
+                var df = documentFrequency.GetValueOrDefault(term, 1);
                 var idf = MathF.Log(((n - df + 0.5f) / (df + 0.5f)) + 1f);
 
-                var numerator   = tf * (K1 + 1);
+                var numerator = tf * (K1 + 1);
                 var denominator = tf + K1 * (1 - B + B * (docLen / (float)_avgDocLength));
 
                 score += idf * (numerator / denominator);
@@ -377,22 +377,22 @@ public class BM25KeywordIndex : IKeywordIndex, IAsyncDisposable
                     reader.GetString(7)) ?? new();
 
                 chunkData[reader.GetString(0)] = new DocumentChunk(
-                    ChunkId:    reader.GetString(0),
+                    ChunkId: reader.GetString(0),
                     DocumentId: reader.GetString(1),
-                    FileName:   reader.GetString(2),
-                    Content:    reader.GetString(3),
-                    ChunkType:  Enum.Parse<ChunkType>(reader.GetString(4)),
+                    FileName: reader.GetString(2),
+                    Content: reader.GetString(3),
+                    ChunkType: Enum.Parse<ChunkType>(reader.GetString(4)),
                     PageNumber: reader.GetInt32(5),
                     ChunkIndex: reader.GetInt32(6),
-                    Metadata:   metadata);
+                    Metadata: metadata);
             }
         }
 
         var results = topChunkIds
             .Where(t => chunkData.ContainsKey(t.ChunkId))
             .Select(t => new RetrievedChunk(
-                Chunk:           chunkData[t.ChunkId],
-                Score:           t.Score,
+                Chunk: chunkData[t.ChunkId],
+                Score: t.Score,
                 RetrievalSource: "sparse"))
             .ToList();
 
@@ -465,7 +465,7 @@ public class BM25KeywordIndex : IKeywordIndex, IAsyncDisposable
         await cmd.ExecuteNonQueryAsync(ct);
 
         _totalChunkCount = 0;
-        _avgDocLength    = 0;
+        _avgDocLength = 0;
 
         _logger.LogWarning("BM25 index cleared — all chunks and terms removed");
     }

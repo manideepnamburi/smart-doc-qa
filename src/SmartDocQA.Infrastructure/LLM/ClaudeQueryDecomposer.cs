@@ -1,8 +1,8 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SmartDocQA.Application.Configuration;
 using SmartDocQA.Domain.Interfaces;
-using System.Text.Json;
 
 namespace SmartDocQA.Infrastructure;
 

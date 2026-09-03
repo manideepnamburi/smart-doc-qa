@@ -27,10 +27,10 @@ public class ClaudeAnswerSynthesizer : IAnswerSynthesizer
         IOptions<PromptsOptions> prompts,
         ILogger<ClaudeAnswerSynthesizer> logger)
     {
-        _llmClient    = llmClient;
+        _llmClient = llmClient;
         _promptLoader = promptLoader;
-        _prompts      = prompts.Value;
-        _logger       = logger;
+        _prompts = prompts.Value;
+        _logger = logger;
     }
 
     public async Task<QAResult> SynthesizeAsync(
@@ -56,13 +56,13 @@ public class ClaudeAnswerSynthesizer : IAnswerSynthesizer
                         "provided documents to answer this question. " +
                         "If you would like an answer from general AI knowledge, " +
                         "set 'fallbackToLLM' to true in your request.",
-                Citations:        new List<Citation>(),
-                Confidence:       ConfidenceLevel.NotFound,
-                RetrievalMode:    RetrievalMode.Hybrid,
-                AnswerSource:     AnswerSource.NotFound,
-                ChunksRetrieved:  0,
+                Citations: new List<Citation>(),
+                Confidence: ConfidenceLevel.NotFound,
+                RetrievalMode: RetrievalMode.Hybrid,
+                AnswerSource: AnswerSource.NotFound,
+                ChunksRetrieved: 0,
                 ChunksAfterRerank: 0,
-                ProcessingTime:   TimeSpan.Zero);
+                ProcessingTime: TimeSpan.Zero);
         }
 
         // ── Chunks found → answer from document ──────────────────────────────
@@ -91,16 +91,16 @@ public class ClaudeAnswerSynthesizer : IAnswerSynthesizer
         }
 
         var systemPrompt = _promptLoader.Load(_prompts.QASystem);
-        var userPrompt   = _promptLoader.LoadAndFill(_prompts.QAUser,
+        var userPrompt = _promptLoader.LoadAndFill(_prompts.QAUser,
             new Dictionary<string, string>
             {
-                ["context"]  = contextBuilder.ToString(),
+                ["context"] = contextBuilder.ToString(),
                 ["question"] = query.Question
             });
 
-        var rawAnswer  = await _llmClient.CompleteAsync(systemPrompt, userPrompt, ct);
-        var citations  = ExtractCitations(rawAnswer, rankedChunks);
-        var answer     = StripCitationLine(rawAnswer);
+        var rawAnswer = await _llmClient.CompleteAsync(systemPrompt, userPrompt, ct);
+        var citations = ExtractCitations(rawAnswer, rankedChunks);
+        var answer = StripCitationLine(rawAnswer);
         var confidence = DetermineConfidence(answer, rankedChunks.Count);
 
         // Claude said "not found" even though we had chunks
@@ -113,14 +113,14 @@ public class ClaudeAnswerSynthesizer : IAnswerSynthesizer
         }
 
         return new QAResult(
-            Answer:            answer,
-            Citations:         citations,
-            Confidence:        confidence,
-            RetrievalMode:     RetrievalMode.Hybrid,
-            AnswerSource:      AnswerSource.Document,
-            ChunksRetrieved:   rankedChunks.Count,
+            Answer: answer,
+            Citations: citations,
+            Confidence: confidence,
+            RetrievalMode: RetrievalMode.Hybrid,
+            AnswerSource: AnswerSource.Document,
+            ChunksRetrieved: rankedChunks.Count,
             ChunksAfterRerank: rankedChunks.Count,
-            ProcessingTime:    TimeSpan.Zero);
+            ProcessingTime: TimeSpan.Zero);
     }
 
     // ─── Answer from Claude's general knowledge (fallback) ────────────────────
@@ -143,14 +143,14 @@ public class ClaudeAnswerSynthesizer : IAnswerSynthesizer
             systemPrompt, query.Question, ct);
 
         return new QAResult(
-            Answer:            answer,
-            Citations:         new List<Citation>(),   // no document citations
-            Confidence:        ConfidenceLevel.Medium,
-            RetrievalMode:     RetrievalMode.Hybrid,
-            AnswerSource:      AnswerSource.LLMFallback,
-            ChunksRetrieved:   0,
+            Answer: answer,
+            Citations: new List<Citation>(),   // no document citations
+            Confidence: ConfidenceLevel.Medium,
+            RetrievalMode: RetrievalMode.Hybrid,
+            AnswerSource: AnswerSource.LLMFallback,
+            ChunksRetrieved: 0,
             ChunksAfterRerank: 0,
-            ProcessingTime:    TimeSpan.Zero);
+            ProcessingTime: TimeSpan.Zero);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -158,7 +158,7 @@ public class ClaudeAnswerSynthesizer : IAnswerSynthesizer
     private List<Citation> ExtractCitations(
         string rawAnswer, List<RankedChunk> ranked)
     {
-        var citations    = new List<Citation>();
+        var citations = new List<Citation>();
         var citationLine = rawAnswer.Split('\n')
             .FirstOrDefault(l => l.TrimStart()
                 .StartsWith("CITATIONS:", StringComparison.OrdinalIgnoreCase));
@@ -177,10 +177,10 @@ public class ClaudeAnswerSynthesizer : IAnswerSynthesizer
         {
             if (!chunkMap.TryGetValue(chunkId, out var chunk)) continue;
             citations.Add(new Citation(
-                ChunkId:         chunk.ChunkId,
-                FileName:        chunk.FileName,
-                PageNumber:      chunk.PageNumber,
-                ChunkType:       chunk.ChunkType,
+                ChunkId: chunk.ChunkId,
+                FileName: chunk.FileName,
+                PageNumber: chunk.PageNumber,
+                ChunkType: chunk.ChunkType,
                 RelevantExcerpt: chunk.Content.Length > 150
                     ? chunk.Content[..150] + "..."
                     : chunk.Content));
@@ -191,7 +191,7 @@ public class ClaudeAnswerSynthesizer : IAnswerSynthesizer
 
     private static string StripCitationLine(string answer)
     {
-        var lines    = answer.Split('\n');
+        var lines = answer.Split('\n');
         var filtered = lines.Where(l =>
             !l.TrimStart()
               .StartsWith("CITATIONS:", StringComparison.OrdinalIgnoreCase));
@@ -200,10 +200,10 @@ public class ClaudeAnswerSynthesizer : IAnswerSynthesizer
 
     private static ConfidenceLevel DetermineConfidence(string answer, int chunkCount)
     {
-        if (answer.Contains("could not find",  StringComparison.OrdinalIgnoreCase) ||
-            answer.Contains("not mentioned",   StringComparison.OrdinalIgnoreCase) ||
-            answer.Contains("not found",       StringComparison.OrdinalIgnoreCase) ||
-            answer.Contains("no information",  StringComparison.OrdinalIgnoreCase))
+        if (answer.Contains("could not find", StringComparison.OrdinalIgnoreCase) ||
+            answer.Contains("not mentioned", StringComparison.OrdinalIgnoreCase) ||
+            answer.Contains("not found", StringComparison.OrdinalIgnoreCase) ||
+            answer.Contains("no information", StringComparison.OrdinalIgnoreCase))
             return ConfidenceLevel.NotFound;
 
         return chunkCount >= 3 ? ConfidenceLevel.High

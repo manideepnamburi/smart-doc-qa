@@ -1,4 +1,4 @@
-﻿using Azure;
+using Azure;
 using Azure.AI.OpenAI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;

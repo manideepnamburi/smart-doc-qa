@@ -46,12 +46,12 @@ public class AgentController : ControllerBase
         [FromBody] QueryRequest request, CancellationToken ct)
     {
         var query = new QAQuery(
-            Question:         request.Question,
-            UseGraph:         request.UseGraph,
-            UseReranking:     request.UseReranking,
-            FallbackToLLM:    request.FallbackToLLM,
+            Question: request.Question,
+            UseGraph: request.UseGraph,
+            UseReranking: request.UseReranking,
+            FallbackToLLM: request.FallbackToLLM,
             DocumentIdFilter: request.DocumentIdFilter,
-            History:          request.History);
+            History: request.History);
 
         var result = await _agentQueryUseCase.ExecuteAsync(query, ct);
         return Ok(result);

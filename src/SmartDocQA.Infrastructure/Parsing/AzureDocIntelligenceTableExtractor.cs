@@ -21,7 +21,7 @@ public class AzureDocIntelligenceTableExtractor : ITableExtractor
         ILogger<AzureDocIntelligenceTableExtractor> logger)
     {
         _options = options.Value;
-        _logger  = logger;
+        _logger = logger;
     }
 
     private DocumentAnalysisClient GetClient() =>
@@ -57,7 +57,7 @@ public class AzureDocIntelligenceTableExtractor : ITableExtractor
 
             foreach (var table in result.Tables)
             {
-                var markdown  = ConvertToMarkdown(table);
+                var markdown = ConvertToMarkdown(table);
                 var firstRegion = table.BoundingRegions.FirstOrDefault();
                 var pageNumber = firstRegion.PageNumber;
 
@@ -72,9 +72,9 @@ public class AzureDocIntelligenceTableExtractor : ITableExtractor
                     caption = caption[..200] + "...";
 
                 tables.Add(new ExtractedTable(
-                    PageNumber:      pageNumber,
+                    PageNumber: pageNumber,
                     MarkdownContent: markdown,
-                    Caption:         caption));
+                    Caption: caption));
 
                 _logger.LogDebug(
                     "Extracted table {Rows}×{Cols} on page {Page}",

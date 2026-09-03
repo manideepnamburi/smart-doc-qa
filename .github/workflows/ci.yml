@@ -1,0 +1,52 @@
+# Continuous Integration for SmartDocQA.
+#
+# Runs on every push and pull request targeting main: restores, builds,
+# checks formatting against .editorconfig, and runs the test suite.
+# This automates the exact discipline followed manually throughout local
+# development -- "always build and verify before committing" -- so style
+# drift or a broken build is caught on every push, not just when someone
+# remembers to run `dotnet build` locally first.
+
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    # windows-latest, not ubuntu-latest -- this solution has real
+    # Windows-specific dependencies (PDFtoImage/PDFium via
+    # ClaudeVisionChartExtractor is flagged CA1416 as Windows-only
+    # in the build output), so CI needs to match that constraint
+    # rather than fail on a platform the code was never validated on.
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          # Matches global.json exactly (10.0.300, rollForward:
+          # latestFeature) -- CI uses the identical SDK version as local
+          # dev, not whatever happens to be preinstalled on the runner.
+          global-json-file: global.json
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Check formatting (.editorconfig)
+        run: dotnet format --verify-no-changes
+        # Fails the build if any file violates the .editorconfig rules
+        # (naming, using-order, line endings, etc.) -- catches style
+        # drift automatically instead of relying on manual review.
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test tests/SmartDocQA.Infrastructure.Tests/SmartDocQA.Infrastructure.Tests.csproj --no-build --configuration Release --verbosity normal

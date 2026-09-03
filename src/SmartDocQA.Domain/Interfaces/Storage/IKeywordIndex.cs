@@ -11,5 +11,5 @@ public interface IKeywordIndex
     Task IndexBatchAsync(List<DocumentChunk> chunks, CancellationToken ct = default);
     Task<List<RetrievedChunk>> SearchAsync(string query, int topK, string? documentIdFilter = null, CancellationToken ct = default);
     Task DeleteByDocumentAsync(string documentId, CancellationToken ct = default);
-    Task ClearAllAsync(CancellationToken ct = default);    
+    Task ClearAllAsync(CancellationToken ct = default);
 }

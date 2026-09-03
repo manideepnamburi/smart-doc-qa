@@ -1,9 +1,9 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SmartDocQA.Application.Configuration;
 using SmartDocQA.Domain.Interfaces;
 using SmartDocQA.Domain.Models;
-using System.Text.Json;
 
 namespace SmartDocQA.Infrastructure;
 
@@ -32,11 +32,11 @@ public class ClaudeReranker : IReranker
         IOptions<RagOptions> ragOptions,
         ILogger<ClaudeReranker> logger)
     {
-        _llmClient   = llmClient;
+        _llmClient = llmClient;
         _promptLoader = promptLoader;
-        _prompts     = prompts.Value;
-        _ragOptions  = ragOptions.Value;
-        _logger      = logger;
+        _prompts = prompts.Value;
+        _ragOptions = ragOptions.Value;
+        _logger = logger;
     }
 
     public async Task<List<RankedChunk>> RerankAsync(

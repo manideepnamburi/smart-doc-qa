@@ -40,7 +40,7 @@ public class AzureBlobSourceResolver : IDocumentSourceResolver
         ILogger<AzureBlobSourceResolver> logger)
     {
         _options = options.Value;
-        _logger  = logger;
+        _logger = logger;
     }
 
     public bool CanResolve(DocumentSource source) =>

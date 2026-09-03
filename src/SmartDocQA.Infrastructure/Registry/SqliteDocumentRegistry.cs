@@ -107,11 +107,11 @@ public class SqliteDocumentRegistry : IDocumentRegistry, IAsyncDisposable
                 (@filePath, @documentId, @fileName, @fileSizeBytes, @ingestedAt)
             """;
 
-        cmd.Parameters.AddWithValue("@filePath",      NormalizePath(filePath));
-        cmd.Parameters.AddWithValue("@documentId",    documentId);
-        cmd.Parameters.AddWithValue("@fileName",      fileName);
+        cmd.Parameters.AddWithValue("@filePath", NormalizePath(filePath));
+        cmd.Parameters.AddWithValue("@documentId", documentId);
+        cmd.Parameters.AddWithValue("@fileName", fileName);
         cmd.Parameters.AddWithValue("@fileSizeBytes", fileSizeBytes);
-        cmd.Parameters.AddWithValue("@ingestedAt",    DateTime.UtcNow.ToString("O"));
+        cmd.Parameters.AddWithValue("@ingestedAt", DateTime.UtcNow.ToString("O"));
 
         await cmd.ExecuteNonQueryAsync(ct);
         _logger.LogDebug("Registered: {FileName} → {DocumentId}", fileName, documentId);
@@ -139,11 +139,11 @@ public class SqliteDocumentRegistry : IDocumentRegistry, IAsyncDisposable
         while (await reader.ReadAsync(ct))
         {
             entries.Add(new RegistryEntry(
-                FilePath:      reader.GetString(0),
-                DocumentId:    reader.GetString(1),
-                FileName:      reader.GetString(2),
+                FilePath: reader.GetString(0),
+                DocumentId: reader.GetString(1),
+                FileName: reader.GetString(2),
                 FileSizeBytes: reader.GetInt64(3),
-                IngestedAt:    DateTime.Parse(reader.GetString(4))));
+                IngestedAt: DateTime.Parse(reader.GetString(4))));
         }
 
         return entries;

@@ -1,4 +1,5 @@
-using SmartDocQA.Infrastructure.VectorStore;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.VectorData;
@@ -8,8 +9,7 @@ using SmartDocQA.Application.Configuration;
 using SmartDocQA.Domain.Enums;
 using SmartDocQA.Domain.Interfaces;
 using SmartDocQA.Domain.Models;
-using System.Security.Cryptography;
-using System.Text;
+using SmartDocQA.Infrastructure.VectorStore;
 
 namespace SmartDocQA.Infrastructure;
 
@@ -34,11 +34,11 @@ public class QdrantVectorStoreAdapter : IVectorStore, IAsyncDisposable
         IOptions<RagOptions> ragOptions,
         ILogger<QdrantVectorStoreAdapter> logger)
     {
-        _options    = options.Value;
+        _options = options.Value;
         _ragOptions = ragOptions.Value;
-        _logger     = logger;
-        _client     = new QdrantClient(_options.Host, _options.Port);
-        _store      = new QdrantVectorStore(_client, ownsClient: true);
+        _logger = logger;
+        _client = new QdrantClient(_options.Host, _options.Port);
+        _store = new QdrantVectorStore(_client, ownsClient: true);
     }
 
     // ── Collection initialisation ─────────────────────────────────────────────
@@ -79,17 +79,17 @@ public class QdrantVectorStoreAdapter : IVectorStore, IAsyncDisposable
 
         var records = chunks.Select(chunk => new QdrantChunkRecord
         {
-            Id         = StableId(chunk.ChunkId),
-            ChunkId    = chunk.ChunkId,
+            Id = StableId(chunk.ChunkId),
+            ChunkId = chunk.ChunkId,
             DocumentId = chunk.DocumentId,
-            FileName   = chunk.FileName,
-            Content    = chunk.Content,
-            ChunkType  = chunk.ChunkType.ToString(),
+            FileName = chunk.FileName,
+            Content = chunk.Content,
+            ChunkType = chunk.ChunkType.ToString(),
             PageNumber = chunk.PageNumber,
             ChunkIndex = chunk.ChunkIndex,
             SourceType = chunk.Metadata.GetValueOrDefault("source_type", ""),
             IngestedAt = chunk.Metadata.GetValueOrDefault("ingested_at", ""),
-            Embedding  = chunk.Embedding ?? Array.Empty<float>()
+            Embedding = chunk.Embedding ?? Array.Empty<float>()
         }).ToList();
 
         foreach (var record in records)
@@ -143,11 +143,11 @@ public class QdrantVectorStoreAdapter : IVectorStore, IAsyncDisposable
 
             results.Add(new RetrievedChunk(
                 Chunk: new DocumentChunk(
-                    ChunkId:    result.Record.ChunkId,
+                    ChunkId: result.Record.ChunkId,
                     DocumentId: result.Record.DocumentId,
-                    FileName:   result.Record.FileName,
-                    Content:    result.Record.Content,
-                    ChunkType:  Enum.Parse<ChunkType>(result.Record.ChunkType),
+                    FileName: result.Record.FileName,
+                    Content: result.Record.Content,
+                    ChunkType: Enum.Parse<ChunkType>(result.Record.ChunkType),
                     PageNumber: result.Record.PageNumber,
                     ChunkIndex: result.Record.ChunkIndex,
                     Metadata: new Dictionary<string, string>
@@ -155,7 +155,7 @@ public class QdrantVectorStoreAdapter : IVectorStore, IAsyncDisposable
                         ["source_type"] = result.Record.SourceType,
                         ["ingested_at"] = result.Record.IngestedAt
                     }),
-                Score:           (float)(result.Score ?? 0),
+                Score: (float)(result.Score ?? 0),
                 RetrievalSource: "dense"));
         }
 

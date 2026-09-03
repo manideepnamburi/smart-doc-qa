@@ -27,13 +27,13 @@ public class DocumentsController : ControllerBase
         IVectorStore vectorStore,
         ILogger<DocumentsController> logger)
     {
-        _ingestUseCase       = ingestUseCase;
+        _ingestUseCase = ingestUseCase;
         _ingestFolderUseCase = ingestFolderUseCase;
-        _queryUseCase        = queryUseCase;
-        _deleteUseCase       = deleteUseCase;
-        _registry            = registry;
-        _vectorStore         = vectorStore;
-        _logger              = logger;
+        _queryUseCase = queryUseCase;
+        _deleteUseCase = deleteUseCase;
+        _registry = registry;
+        _vectorStore = vectorStore;
+        _logger = logger;
     }
 
     // ─── POST /api/documents/ingest/local ─────────────────────────────────────
@@ -47,8 +47,8 @@ public class DocumentsController : ControllerBase
     {
         var source = new DocumentSource(
             SourceType: DocumentSourceType.LocalPath,
-            Path:       request.Path,
-            FileName:   Path.GetFileName(request.Path));
+            Path: request.Path,
+            FileName: Path.GetFileName(request.Path));
 
         var metadata = await _ingestUseCase.ExecuteAsync(source, ct);
         return Ok(metadata);
@@ -84,31 +84,31 @@ public class DocumentsController : ControllerBase
 
         return Ok(new
         {
-            folderPath     = result.FolderPath,
-            mode           = result.Mode.ToString(),
-            totalFound     = result.TotalFound,
-            ingestedCount  = result.IngestedCount,
-            skippedCount   = result.SkippedCount,
-            failedCount    = result.FailedCount,
-            notFoundCount  = result.NotFound.Count,
+            folderPath = result.FolderPath,
+            mode = result.Mode.ToString(),
+            totalFound = result.TotalFound,
+            ingestedCount = result.IngestedCount,
+            skippedCount = result.SkippedCount,
+            failedCount = result.FailedCount,
+            notFoundCount = result.NotFound.Count,
             processingTime = result.ProcessingTime.ToString(@"hh\:mm\:ss"),
 
             ingested = result.Ingested.Select(m => new
             {
-                documentId  = m.DocumentId,
-                fileName    = m.FileName,
-                totalPages  = m.TotalPages,
+                documentId = m.DocumentId,
+                fileName = m.FileName,
+                totalPages = m.TotalPages,
                 totalChunks = m.TotalChunks,
-                ingestedAt  = m.IngestedAt
+                ingestedAt = m.IngestedAt
             }),
 
-            skipped  = result.Skipped.Select(Path.GetFileName),
+            skipped = result.Skipped.Select(Path.GetFileName),
             notFound = result.NotFound,
 
             failed = result.Failed.Select(f => new
             {
                 fileName = f.FileName,
-                error    = f.Error
+                error = f.Error
             }),
 
             message = result.Mode switch
@@ -148,10 +148,10 @@ public class DocumentsController : ControllerBase
         [FromBody] IngestBlobRequest request, CancellationToken ct)
     {
         var source = new DocumentSource(
-            SourceType:    DocumentSourceType.AzureBlob,
-            Path:          request.BlobPath,
+            SourceType: DocumentSourceType.AzureBlob,
+            Path: request.BlobPath,
             ContainerName: request.ContainerName,
-            FileName:      Path.GetFileName(request.BlobPath));
+            FileName: Path.GetFileName(request.BlobPath));
 
         var metadata = await _ingestUseCase.ExecuteAsync(source, ct);
         return Ok(metadata);
@@ -168,8 +168,8 @@ public class DocumentsController : ControllerBase
     {
         var source = new DocumentSource(
             SourceType: DocumentSourceType.OneDrive,
-            Path:       request.ItemId,
-            FileName:   request.FileName);
+            Path: request.ItemId,
+            FileName: request.FileName);
 
         var metadata = await _ingestUseCase.ExecuteAsync(source, ct);
         return Ok(metadata);
@@ -186,12 +186,12 @@ public class DocumentsController : ControllerBase
         [FromBody] QueryRequest request, CancellationToken ct)
     {
         var query = new QAQuery(
-            Question:         request.Question,
-            UseGraph:         request.UseGraph,
-            UseReranking:     request.UseReranking,
-            FallbackToLLM:    request.FallbackToLLM,
+            Question: request.Question,
+            UseGraph: request.UseGraph,
+            UseReranking: request.UseReranking,
+            FallbackToLLM: request.FallbackToLLM,
             DocumentIdFilter: request.DocumentIdFilter,
-            History:          request.History);
+            History: request.History);
 
         var result = await _queryUseCase.ExecuteAsync(query, ct);
         return Ok(result);
@@ -222,8 +222,8 @@ public class DocumentsController : ControllerBase
     {
         var deleteRequest = new DeleteRequest(
             FilesToDelete: request.FilesToDelete,
-            FileTypes:     request.FileTypes,
-            DeleteAll:     request.DeleteAll);
+            FileTypes: request.FileTypes,
+            DeleteAll: request.DeleteAll);
 
         var result = await _deleteUseCase.ExecuteAsync(deleteRequest, ct);
 
@@ -232,14 +232,14 @@ public class DocumentsController : ControllerBase
 
         return Ok(new
         {
-            success      = result.Success,
-            mode         = result.Mode.ToString(),
+            success = result.Success,
+            mode = result.Mode.ToString(),
             deletedCount = result.Deleted.Count,
-            notFound     = result.NotFound,
+            notFound = result.NotFound,
 
             deleted = result.Deleted.Select(d => new
             {
-                fileName   = d.FileName,
+                fileName = d.FileName,
                 documentId = d.DocumentId
             }),
 
@@ -276,9 +276,9 @@ public class DocumentsController : ControllerBase
             documents = entries.Select(e => new
             {
                 documentId = e.DocumentId,
-                fileName   = e.FileName,
-                extension  = Path.GetExtension(e.FileName).ToLower(),
-                filePath   = e.FilePath,
+                fileName = e.FileName,
+                extension = Path.GetExtension(e.FileName).ToLower(),
+                filePath = e.FilePath,
                 fileSizeMb = Math.Round(e.FileSizeBytes / 1024.0 / 1024.0, 2),
                 ingestedAt = e.IngestedAt
             })

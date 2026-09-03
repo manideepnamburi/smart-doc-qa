@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
 using SmartDocQA.Application.Configuration;
-using SmartDocQA.Domain.Models;
 using SmartDocQA.Domain.Enums;
+using SmartDocQA.Domain.Models;
 using SmartDocQA.Infrastructure.Retrieval;
 using Xunit;
 

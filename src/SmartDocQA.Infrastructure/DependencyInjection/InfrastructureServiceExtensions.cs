@@ -1,18 +1,18 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SmartDocQA.Application.Configuration;
 using SmartDocQA.Application.UseCases;
 using SmartDocQA.Domain.Interfaces;
 using SmartDocQA.Infrastructure.Chunking;
 using SmartDocQA.Infrastructure.DocumentSources;
+using SmartDocQA.Infrastructure.Guardrails;
 using SmartDocQA.Infrastructure.LLM;
 using SmartDocQA.Infrastructure.Parsing;
 using SmartDocQA.Infrastructure.Prompts;
 using SmartDocQA.Infrastructure.Registry;
 using SmartDocQA.Infrastructure.Retrieval;
-using Microsoft.Extensions.Logging;
-using SmartDocQA.Infrastructure.Guardrails;
 
 namespace SmartDocQA.Infrastructure.DependencyInjection;
 
@@ -55,7 +55,7 @@ public static class InfrastructureServiceExtensions
             configuration.GetSection(VisionExtractionOptions.SectionName));
 
 
-        var ragOptions      = configuration.GetSection(RagOptions.SectionName).Get<RagOptions>() ?? new();
+        var ragOptions = configuration.GetSection(RagOptions.SectionName).Get<RagOptions>() ?? new();
         var chunkingOptions = configuration.GetSection(ChunkingOptions.SectionName).Get<ChunkingOptions>() ?? new();
 
         // ── Document Source Resolvers ─────────────────────────────────────────
@@ -100,9 +100,9 @@ public static class InfrastructureServiceExtensions
         // ── Embedding Service — factory picks provider from config ────────────
         services.AddSingleton<IEmbeddingService>(sp =>
         {
-            var options     = sp.GetRequiredService<IOptions<EmbeddingOptions>>().Value;
+            var options = sp.GetRequiredService<IOptions<EmbeddingOptions>>().Value;
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-            var logger      = loggerFactory.CreateLogger("EmbeddingService");
+            var logger = loggerFactory.CreateLogger("EmbeddingService");
             return EmbeddingServiceFactory.Create(options, logger);
         });
 
@@ -172,8 +172,8 @@ public static class InfrastructureServiceExtensions
 
         services.AddScoped<IInputGuardrail, PromptInjectionGuardrail>();   // CHECK 1 -- active
 
-         services.AddScoped<IInputGuardrail, PiiScrubGuardrail>();       // CHECK 2 -- uncomment when ready
-         services.AddScoped<IOutputGuardrail, GroundingCheckGuardrail>(); // CHECK 3 -- uncomment when ready
+        services.AddScoped<IInputGuardrail, PiiScrubGuardrail>();       // CHECK 2 -- uncomment when ready
+        services.AddScoped<IOutputGuardrail, GroundingCheckGuardrail>(); // CHECK 3 -- uncomment when ready
         services.AddScoped<IInputGuardrail, OffTopicGuardrail>();       // CHECK 4 -- uncomment when ready
         services.AddScoped<IInputGuardrail, LlmSafetyGuardrail>();      // CHECK 5 -- uncomment LAST (most expensive; must stay last in this list so cheap checks run first)
 
@@ -188,8 +188,6 @@ public static class InfrastructureServiceExtensions
 
         // ── Agent Answer Synthesizer (Phase 7.5) ──────────────────────────────
         services.AddScoped<IAgentAnswerSynthesizer, ClaudeAgentAnswerSynthesizer>();
-
-        return services;
 
         return services;
     }

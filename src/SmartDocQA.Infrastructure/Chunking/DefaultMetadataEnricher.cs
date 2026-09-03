@@ -18,7 +18,7 @@ public class DefaultMetadataEnricher : IMetadataEnricher
             {
                 ["source_type"] = source.SourceType.ToString(),
                 ["ingested_at"] = DateTime.UtcNow.ToString("O"),
-                ["file_name"]   = c.FileName
+                ["file_name"] = c.FileName
             };
             return c with { Metadata = metadata };
         }).ToList();

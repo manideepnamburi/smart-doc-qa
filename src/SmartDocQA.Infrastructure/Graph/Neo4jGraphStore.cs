@@ -94,8 +94,8 @@ public class Neo4jGraphStore : IGraphStore, IAsyncDisposable
                                         ELSE e.pageNumbers END",
                     new
                     {
-                        name       = entity.Name,
-                        type       = entity.Type,
+                        name = entity.Name,
+                        type = entity.Type,
                         documentId = entity.DocumentId,
                         pageNumber = entity.PageNumber
                     });
@@ -139,9 +139,9 @@ public class Neo4jGraphStore : IGraphStore, IAsyncDisposable
                                         ELSE r.documentIds END",
                     new
                     {
-                        fromName   = rel.FromEntity,
-                        toName     = rel.ToEntity,
-                        relType    = rel.RelationType,
+                        fromName = rel.FromEntity,
+                        toName = rel.ToEntity,
+                        relType = rel.RelationType,
                         documentId = rel.DocumentId
                     });
             });
@@ -235,11 +235,11 @@ public class Neo4jGraphStore : IGraphStore, IAsyncDisposable
 
                 results.Add(new RetrievedChunk(
                     Chunk: new DocumentChunk(
-                        ChunkId:    $"graph_{entityName.Replace(" ", "_")}",
+                        ChunkId: $"graph_{entityName.Replace(" ", "_")}",
                         DocumentId: docIds.FirstOrDefault() ?? "",
-                        FileName:   "",
-                        Content:    description,
-                        ChunkType:  Domain.Enums.ChunkType.Text,
+                        FileName: "",
+                        Content: description,
+                        ChunkType: Domain.Enums.ChunkType.Text,
                         PageNumber: 0,
                         ChunkIndex: rank,
                         Metadata: new Dictionary<string, string> { ["source"] = "graph" }),
@@ -249,7 +249,7 @@ public class Neo4jGraphStore : IGraphStore, IAsyncDisposable
                     // RRFFusionStrategy only needs relative ORDER within
                     // each retriever's own result list, not a comparable
                     // absolute scale across retrievers.
-                    Score:           1.0f / (rank + 1),
+                    Score: 1.0f / (rank + 1),
                     RetrievalSource: "graph"));
 
                 rank++;

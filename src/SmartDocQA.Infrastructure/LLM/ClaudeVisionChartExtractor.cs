@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PDFtoImage;
@@ -5,7 +6,6 @@ using SkiaSharp;
 using SmartDocQA.Application.Configuration;
 using SmartDocQA.Domain.Interfaces;
 using SmartDocQA.Domain.Models;
-using System.Collections.Concurrent;
 
 namespace SmartDocQA.Infrastructure;
 
@@ -55,7 +55,7 @@ public class ClaudeVisionChartExtractor : IChartExtractor
             await stream.CopyToAsync(ms, ct);
             pdfBytes = ms.ToArray();
         }
-
+#pragma warning disable CA1416
         var pageCount = Conversion.GetPageCount(pdfBytes);
         _logger.LogInformation(
             "Claude Vision: rendering {Pages} pages of {File} for chart/OCR analysis",
@@ -73,10 +73,12 @@ public class ClaudeVisionChartExtractor : IChartExtractor
             ct.ThrowIfCancellationRequested();
             using var bitmap = Conversion.ToImage(pdfBytes, page: i,
                 options: new RenderOptions(Dpi: 120));
+#pragma warning restore
             using var image = SKImage.FromBitmap(bitmap);
             using var encoded = image.Encode(SKEncodedImageFormat.Png, 85);
             renderedPages.Add((i, encoded.ToArray()));
         }
+#pragma warning restore CA1416
 
         // ── Step 2: Analyze pages CONCURRENTLY, capped by MaxConcurrency ───
         // The actual fix: instead of each page waiting on the prior page's

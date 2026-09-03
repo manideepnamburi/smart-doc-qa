@@ -261,7 +261,7 @@ public class AgentModeOptions
     /// </summary>
     public int MaxRetriesPerSubQuestion { get; set; } = 2;
 
-       /// <summary>
+    /// <summary>
     /// How many sub-questions can be processed concurrently (each running
     /// its own retrieve -> verify -> reformulate+retry loop). Each
     /// sub-question is fully independent of the others, so this is safe
