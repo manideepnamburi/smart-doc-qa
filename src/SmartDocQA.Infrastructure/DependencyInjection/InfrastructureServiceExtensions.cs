@@ -51,6 +51,8 @@ public static class InfrastructureServiceExtensions
             configuration.GetSection(BM25Options.SectionName));
         services.Configure<GuardrailOptions>(
           configuration.GetSection(GuardrailOptions.SectionName));
+        services.Configure<VisionExtractionOptions>(
+            configuration.GetSection(VisionExtractionOptions.SectionName));
 
 
         var ragOptions      = configuration.GetSection(RagOptions.SectionName).Get<RagOptions>() ?? new();
@@ -174,6 +176,20 @@ public static class InfrastructureServiceExtensions
          services.AddScoped<IOutputGuardrail, GroundingCheckGuardrail>(); // CHECK 3 -- uncomment when ready
         services.AddScoped<IInputGuardrail, OffTopicGuardrail>();       // CHECK 4 -- uncomment when ready
         services.AddScoped<IInputGuardrail, LlmSafetyGuardrail>();      // CHECK 5 -- uncomment LAST (most expensive; must stay last in this list so cheap checks run first)
+
+        // ── Query Decomposer (Phase 7.5) ──────────────────────────────────────
+        services.AddScoped<IQueryDecomposer, ClaudeQueryDecomposer>();
+
+        // ── Answer Verifier (Phase 7.5) ───────────────────────────────────────
+        services.AddScoped<IAnswerVerifier, ClaudeAnswerVerifier>();
+
+        // ── Query Reformulator (Phase 7.5) ────────────────────────────────────
+        services.AddScoped<IQueryReformulator, ClaudeQueryReformulator>();
+
+        // ── Agent Answer Synthesizer (Phase 7.5) ──────────────────────────────
+        services.AddScoped<IAgentAnswerSynthesizer, ClaudeAgentAnswerSynthesizer>();
+
+        return services;
 
         return services;
     }

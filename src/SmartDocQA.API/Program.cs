@@ -1,13 +1,32 @@
 using SmartDocQA.Application.Configuration;
-using SmartDocQA.Application.UseCases;
-using SmartDocQA.Domain.Interfaces;
-using SmartDocQA.Infrastructure;
+using SmartDocQA.Application.DependencyInjection;
 using SmartDocQA.Infrastructure.DependencyInjection;
-using SmartDocQA.Application.Pipelines;
+
+// ─── Program.cs (Composition Root) ──────────────────────────────────────────
+//
+// This file's ONLY job is host bootstrapping: wire up ASP.NET Core itself
+// (controllers, Swagger, logging, CORS, memory cache), then delegate every
+// layer's own service registrations to that layer's own extension method
+// -- AddInfrastructure() and AddApplicationServices() -- rather than
+// listing individual services here.
+//
+// WHY THIS SPLIT (added during Phase 7.5 cleanup):
+// Before this refactor, every use case, retrieval-pipeline, and Phase 7.5
+// agent-pipeline registration lived directly in this file as it grew
+// phase by phase -- by the time Phase 7.5 finished, this file had two
+// duplicate blocks registering the same use cases twice (harmless at
+// runtime, but a real maintenance smell) and no clear home for
+// Application-layer registrations distinct from Infrastructure-layer
+// ones. Each layer now owns and exposes its own registration method,
+// called here in dependency order -- Infrastructure first (nothing in
+// Application depends on anything in the API project), then
+// Application. This keeps Program.cs readable regardless of how many
+// more services future phases add, since growth happens inside each
+// layer's own extension method instead of this file.
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── Services ──────────────────────────────────────────────────────────────────
+// ── ASP.NET Core host services ───────────────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -20,55 +39,26 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ── Infrastructure (all interfaces + implementations) ─────────────────────────
-builder.Services.AddInfrastructure(builder.Configuration);
-
-// ── Application Use Cases ─────────────────────────────────────────────────────
-builder.Services.AddScoped<IngestDocumentUseCase>();
-builder.Services.AddScoped<IngestFolderUseCase>();
-builder.Services.AddScoped<QueryDocumentUseCase>();
-builder.Services.AddScoped<DeleteDocumentsUseCase>();
-
-// NEW: also expose it via the interface, resolving to the SAME scoped
-// instance as the line above — this is what lets DocumentsController keep
-// injecting the concrete IngestDocumentUseCase directly (unchanged) while
-// IngestFolderUseCase injects the new IIngestDocumentUseCase, without
-// creating two separate instances per request.
-builder.Services.AddScoped<IIngestDocumentUseCase>(sp => sp.GetRequiredService<IngestDocumentUseCase>());
-builder.Services.AddScoped<IngestFolderUseCase>();
-builder.Services.AddScoped<QueryDocumentUseCase>();
-builder.Services.AddScoped<DeleteDocumentsUseCase>();
-
-// Phase 7.5: IRetrievalPipeline is the extracted retrieve+fuse+rerank
-// strategy, now shared between QueryDocumentUseCase and the upcoming
-// AgentQueryUseCase. HybridRetrievalPipeline is today's implementation
-// (dense+sparse+graph -> RRF fuse -> rerank) -- swap this one line to
-// change the retrieval STRATEGY for every caller at once.
-builder.Services.AddScoped<IRetrievalPipeline, HybridRetrievalPipeline>();
-
-// ── Logging ───────────────────────────────────────────────────────────────────
-// NOTE: Deliberately NOT calling SetMinimumLevel() here. Doing so sets a hard
-// floor in code that overrides per-category levels from appsettings.json
-// (e.g. "SmartDocQA.Infrastructure.Retrieval.BM25KeywordIndex": "Debug").
-// AddConsole() alone already reads LogLevel settings from configuration —
-// builder.Logging picks up appsettings.json automatically by default.
 builder.Services.AddLogging(logging =>
 {
+    // Deliberately NOT calling SetMinimumLevel() here. Doing so sets a hard
+    // floor in code that overrides per-category levels from appsettings.json
+    // (e.g. "SmartDocQA.Infrastructure.Retrieval.BM25KeywordIndex": "Debug").
+    // AddConsole() alone already reads LogLevel settings from configuration.
     logging.AddConsole();
 });
 
-// ── Memory Cache ──────────────────────────────────────────────────────────────
 builder.Services.AddMemoryCache();
 
-//    Use Cases" -- binds the Cors config section and registers a CORS
-//    policy driven entirely by appsettings, so dev vs. production is just
-//    a config difference, never a code difference:
-
+// ── CORS ──────────────────────────────────────────────────────────────────────
+// Stays here rather than in a layer extension method -- CORS policy setup
+// is a genuine ASP.NET Core hosting concern (it configures the HTTP
+// pipeline itself), not a Domain/Application/Infrastructure concern.
+// Policy is config-driven so dev (Vite's default port) vs. production
+// (a real domain, once deployed) is just an appsettings difference, never
+// a code difference.
 builder.Services.Configure<CorsOptions>(
     builder.Configuration.GetSection(CorsOptions.SectionName));
-
-builder.Services.Configure<VisionExtractionOptions>(
-    builder.Configuration.GetSection(VisionExtractionOptions.SectionName));
 
 builder.Services.AddCors(options =>
 {
@@ -84,18 +74,19 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.Configure<AgentModeOptions>(
-    builder.Configuration.GetSection(AgentModeOptions.SectionName));
-builder.Services.AddScoped<IQueryDecomposer, ClaudeQueryDecomposer>();
-builder.Services.AddScoped<IAnswerVerifier, ClaudeAnswerVerifier>();
-builder.Services.AddScoped<IQueryReformulator, ClaudeQueryReformulator>();
-builder.Services.AddScoped<IAgentAnswerSynthesizer, ClaudeAgentAnswerSynthesizer>();
-builder.Services.AddScoped<AgentQueryUseCase>();
-
+// ── Layer registrations ──────────────────────────────────────────────────────
+// Infrastructure first, then Application -- matches the dependency
+// direction (Application depends on Domain interfaces; Infrastructure
+// provides their concrete implementations; neither depends on the other
+// directly, but registering Infrastructure's DI container entries first
+// means anything Application's registrations resolve via constructor
+// injection at startup is already available).
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplicationServices(builder.Configuration);
 
 var app = builder.Build();
 
-// ── Middleware ────────────────────────────────────────────────────────────────
+// ── Middleware pipeline ──────────────────────────────────────────────────────
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
