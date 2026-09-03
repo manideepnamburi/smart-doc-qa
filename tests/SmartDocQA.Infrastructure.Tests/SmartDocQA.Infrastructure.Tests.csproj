@@ -19,6 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\SmartDocQA.Domain\SmartDocQA.Domain.csproj" />
+    <ProjectReference Include="..\..\src\SmartDocQA.Application\SmartDocQA.Application.csproj" />
     <ProjectReference Include="..\..\src\SmartDocQA.Infrastructure\SmartDocQA.Infrastructure.csproj" />
   </ItemGroup>
   
